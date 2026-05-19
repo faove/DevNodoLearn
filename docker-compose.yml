@@ -1,0 +1,31 @@
+networks:
+  devnodo_net:
+    external: true
+
+services:
+  devnodo-learn:
+    image: nginx:alpine
+    container_name: devnodo-learn
+    restart: unless-stopped
+    volumes:
+      - ./dist:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - devnodo_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=devnodo_net"
+
+      # HTTPS
+      - "traefik.http.routers.devnodo-learn.rule=Host(`learn.devnodo.com`)"
+      - "traefik.http.routers.devnodo-learn.entrypoints=websecure"
+      - "traefik.http.routers.devnodo-learn.tls=true"
+      - "traefik.http.routers.devnodo-learn.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.devnodo-learn.service=devnodo-learn"
+
+      # HTTP → HTTPS
+      - "traefik.http.routers.devnodo-learn-http.rule=Host(`learn.devnodo.com`)"
+      - "traefik.http.routers.devnodo-learn-http.entrypoints=web"
+      - "traefik.http.routers.devnodo-learn-http.middlewares=redirect-to-https"
+
+      - "traefik.http.services.devnodo-learn.loadbalancer.server.port=80"

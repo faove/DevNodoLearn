@@ -47,7 +47,7 @@ export default function TutorChat({ lessonContext, userCode }) {
       <div className="tutor-header">
         <div className="tutor-avatar">AI</div>
         <div>
-          <div className="tutor-name">Tutor Claude</div>
+          <div className="tutor-name">Tutor Nodi</div>
           <div className="tutor-subtitle">Pregúntame sobre la lección</div>
         </div>
         <div className="tutor-badge tutor-badge-live">En vivo</div>

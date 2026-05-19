@@ -30,7 +30,7 @@ export async function askClaude({ question, lessonContext, userCode }) {
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': 'http://localhost:5173',
+      'HTTP-Referer': 'https://learn.devnodo.com',
       'X-Title': 'DevNodo Learn',
     },
     body: JSON.stringify({

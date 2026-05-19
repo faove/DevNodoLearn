@@ -25,9 +25,14 @@ export default function TutorChat({ lessonContext, userCode }) {
     setMessages(prev => [...prev, { role: 'user', text: question }])
     setLoading(true)
 
-    const answer = await askClaude({ question, lessonContext, userCode })
-    setMessages(prev => [...prev, { role: 'assistant', text: answer }])
-    setLoading(false)
+    try {
+      const answer = await askClaude({ question, lessonContext, userCode })
+      setMessages(prev => [...prev, { role: 'assistant', text: answer }])
+    } catch (err) {
+      setMessages(prev => [...prev, { role: 'assistant', text: `Error al conectar con el tutor: ${err.message}`, isError: true }])
+    } finally {
+      setLoading(false)
+    }
   }
 
   function handleKey(e) {
@@ -45,7 +50,7 @@ export default function TutorChat({ lessonContext, userCode }) {
           <div className="tutor-name">Tutor Claude</div>
           <div className="tutor-subtitle">Pregúntame sobre la lección</div>
         </div>
-        <div className="tutor-badge">Placeholder</div>
+        <div className="tutor-badge tutor-badge-live">En vivo</div>
       </div>
 
       <div className="tutor-messages">

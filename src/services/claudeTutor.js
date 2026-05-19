@@ -1,37 +1,54 @@
-// Placeholder — reemplazar con llamada real a Anthropic API cuando tengas la key.
-// Estructura lista para conectar: recibe { question, lessonContext, userCode }
-// y devuelve una respuesta de texto.
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
+const MODEL = 'anthropic/claude-3.5-haiku'
+
+function buildSystemPrompt(lessonContext) {
+  return `Eres un tutor de programación en Python para jóvenes de 15+ años.
+Estás enseñando la lección: "${lessonContext}".
+
+Reglas:
+- Responde SIEMPRE en español.
+- Sé conciso: máximo 3-4 oraciones salvo que el estudiante pida más detalle.
+- Usa ejemplos de código cortos cuando ayude a entender.
+- Si el estudiante comparte código con errores, señala el problema sin darle la solución completa — guíalo.
+- Tono amigable y motivador, no condescendiente.
+- Si la pregunta no tiene que ver con Python o la lección, redirige amablemente.`
+}
 
 export async function askClaude({ question, lessonContext, userCode }) {
-  // --- CONEXIÓN REAL (descomentar cuando tengas la API key) ---
-  // const response = await fetch('/api/tutor', {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({ question, lessonContext, userCode }),
-  // })
-  // const data = await response.json()
-  // return data.answer
+  const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY
 
-  // --- PLACEHOLDER: respuestas simuladas ---
-  await new Promise(r => setTimeout(r, 800))
-
-  const q = question.toLowerCase()
-
-  if (q.includes('variable')) {
-    return 'Una variable es un espacio en memoria al que le das un nombre para guardar un valor. En Python solo escribes el nombre, un =, y el valor. Por ejemplo: edad = 17'
-  }
-  if (q.includes('type') || q.includes('tipo')) {
-    return 'Puedes saber el tipo de cualquier valor usando type(). Por ejemplo: print(type(42)) te mostrará <class "int">. Los tipos principales son str, int, float y bool.'
-  }
-  if (q.includes('string') || q.includes('texto') || q.includes('str')) {
-    return 'Un string (str) es texto. Siempre va entre comillas simples o dobles: nombre = "Ana" o nombre = \'Ana\'. Puedes unir strings con el operador +.'
-  }
-  if (q.includes('print')) {
-    return 'print() muestra valores en la consola. Puedes pasarle varios valores separados por coma: print("Hola", nombre, "tienes", edad, "años")'
-  }
-  if (q.includes('error')) {
-    return 'Los errores en Python dan mucha información. Mira la última línea del mensaje — dice qué tipo de error es. SyntaxError = algo mal escrito. NameError = usaste una variable que no existe. TypeError = operación con tipos incompatibles.'
+  if (!apiKey || apiKey === 'TU_KEY_AQUI') {
+    return '⚠️ Falta configurar la API key en el archivo .env (VITE_OPENROUTER_API_KEY).'
   }
 
-  return `Buena pregunta sobre "${question}". Estoy en modo placeholder por ahora. Cuando se conecte la API de Claude real, recibirás respuestas personalizadas basadas en el código que estás escribiendo y la lección actual.`
+  const userMessage = userCode?.trim()
+    ? `${question}\n\nMi código actual:\n\`\`\`python\n${userCode}\n\`\`\``
+    : question
+
+  const response = await fetch(OPENROUTER_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'http://localhost:5173',
+      'X-Title': 'DevNodo Learn',
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      messages: [
+        { role: 'system', content: buildSystemPrompt(lessonContext) },
+        { role: 'user', content: userMessage },
+      ],
+      max_tokens: 400,
+      temperature: 0.5,
+    }),
+  })
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}))
+    throw new Error(err?.error?.message || `Error ${response.status}`)
+  }
+
+  const data = await response.json()
+  return data.choices[0].message.content.trim()
 }

@@ -2,8 +2,9 @@ import { useRef } from 'react'
 import Editor from '@monaco-editor/react'
 import './CodeEditor.css'
 
-export default function CodeEditor({ value, onChange, onRun, running, pyStatus }) {
+export default function CodeEditor({ value, onChange, onRun, running, pyStatus, language = 'python' }) {
   const editorRef = useRef(null)
+  const isHtml = language === 'html'
 
   function handleMount(editor) {
     editorRef.current = editor
@@ -26,23 +27,32 @@ export default function CodeEditor({ value, onChange, onRun, running, pyStatus }
   return (
     <div className="code-editor-wrap">
       <div className="editor-toolbar">
-        <div className={`py-status ${statusClass}`}>
-          <span className="py-status-dot" />
-          {statusLabel}
-        </div>
+        {isHtml ? (
+          <div className="py-status status-ready">
+            <span className="py-status-dot" />
+            HTML
+          </div>
+        ) : (
+          <div className={`py-status ${statusClass}`}>
+            <span className="py-status-dot" />
+            {statusLabel}
+          </div>
+        )}
         <button
           className="run-btn"
           onClick={onRun}
-          disabled={pyStatus !== 'ready' || running}
+          disabled={(!isHtml && pyStatus !== 'ready') || running}
         >
-          {running ? '▶ Ejecutando…' : '▶ Ejecutar'}
+          {running
+            ? (isHtml ? '▶ Renderizando…' : '▶ Ejecutando…')
+            : (isHtml ? '▶ Previsualizar' : '▶ Ejecutar')}
           <span className="run-shortcut">Ctrl+Enter</span>
         </button>
       </div>
 
       <Editor
         height="260px"
-        language="python"
+        language={language}
         theme="vs-dark"
         value={value}
         onChange={onChange}

@@ -4,7 +4,9 @@ import OutputPanel from './OutputPanel'
 import { usePyodide } from '../hooks/usePyodide'
 import './ExercisePanel.css'
 
-export default function ExercisePanel({ exercises }) {
+export default function ExercisePanel({ exercises, language = 'python' }) {
+  const isHtml = language === 'html'
+
   const [currentIdx, setCurrentIdx] = useState(0)
   const [codes, setCodes] = useState(() =>
     Object.fromEntries(exercises.map(ex => [ex.id, ex.starterCode]))
@@ -23,6 +25,15 @@ export default function ExercisePanel({ exercises }) {
   async function handleRun() {
     setRunning(true)
     setShowHint(false)
+
+    if (isHtml) {
+      setOutputs(prev => ({ ...prev, [ex.id]: { html: code } }))
+      const validation = ex.validate('', code)
+      setResults(prev => ({ ...prev, [ex.id]: validation }))
+      setRunning(false)
+      return
+    }
+
     const { output: out, error } = await runCode(code)
     const displayed = error || out
     setOutputs(prev => ({ ...prev, [ex.id]: { text: displayed, isError: !!error } }))
@@ -67,6 +78,7 @@ export default function ExercisePanel({ exercises }) {
         onRun={handleRun}
         running={running}
         pyStatus={pyStatus}
+        language={language}
       />
 
       <div className="exercise-actions">
@@ -94,7 +106,19 @@ export default function ExercisePanel({ exercises }) {
         </div>
       )}
 
-      {output && (
+      {output?.html && (
+        <div className="html-preview-wrap">
+          <div className="html-preview-label">Vista previa</div>
+          <iframe
+            className="html-preview-frame"
+            srcDoc={output.html}
+            sandbox="allow-scripts"
+            title="Vista previa HTML"
+          />
+        </div>
+      )}
+
+      {output && !output.html && (
         <OutputPanel
           output={output.isError ? '' : output.text}
           error={output.isError ? output.text : null}

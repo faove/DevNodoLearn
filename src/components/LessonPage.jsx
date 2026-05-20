@@ -6,16 +6,39 @@ import OutputPanel from './OutputPanel'
 import { usePyodide } from '../hooks/usePyodide'
 import './LessonPage.css'
 
+const HTML_STARTER = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mi página</title>
+</head>
+<body>
+  <h1>¡Hola, mundo!</h1>
+  <p>Prueba el código HTML de los ejemplos aquí.</p>
+</body>
+</html>
+`
+
 export default function LessonPage({ lesson, exercises, lessonNumber }) {
+  const language = lesson.language || 'python'
+  const isHtml = language === 'html'
+
   const [activeTab, setActiveTab] = useState('lesson')
-  const [sandboxCode, setSandboxCode] = useState('# Prueba el código de los ejemplos aquí\nprint("¡Hola, Python!")\n')
+  const [sandboxCode, setSandboxCode] = useState(
+    isHtml ? HTML_STARTER : '# Prueba el código de los ejemplos aquí\nprint("¡Hola, Python!")\n'
+  )
   const [sandboxOutput, setSandboxOutput] = useState(null)
+  const [sandboxPreview, setSandboxPreview] = useState(null)
   const [sandboxRunning, setSandboxRunning] = useState(false)
   const [currentCode, setCurrentCode] = useState('')
 
   const { status: pyStatus, runCode } = usePyodide()
 
   async function runSandbox() {
+    if (isHtml) {
+      setSandboxPreview(sandboxCode)
+      return
+    }
     setSandboxRunning(true)
     const { output, error } = await runCode(sandboxCode)
     setSandboxOutput({ text: error || output, isError: !!error })
@@ -45,6 +68,7 @@ export default function LessonPage({ lesson, exercises, lessonNumber }) {
                     className="example-try-btn"
                     onClick={() => {
                       setSandboxCode(section.example)
+                      if (isHtml) setSandboxPreview(null)
                       setActiveTab('sandbox')
                     }}
                   >
@@ -84,17 +108,32 @@ export default function LessonPage({ lesson, exercises, lessonNumber }) {
                 onRun={runSandbox}
                 running={sandboxRunning}
                 pyStatus={pyStatus}
+                language={language}
               />
-              <OutputPanel
-                output={sandboxOutput?.isError ? '' : sandboxOutput?.text}
-                error={sandboxOutput?.isError ? sandboxOutput?.text : null}
-                running={sandboxRunning}
-              />
+              {isHtml ? (
+                sandboxPreview && (
+                  <div className="html-preview-wrap">
+                    <div className="html-preview-label">Vista previa</div>
+                    <iframe
+                      className="html-preview-frame"
+                      srcDoc={sandboxPreview}
+                      sandbox="allow-scripts"
+                      title="Vista previa HTML"
+                    />
+                  </div>
+                )
+              ) : (
+                <OutputPanel
+                  output={sandboxOutput?.isError ? '' : sandboxOutput?.text}
+                  error={sandboxOutput?.isError ? sandboxOutput?.text : null}
+                  running={sandboxRunning}
+                />
+              )}
             </div>
           )}
 
           {activeTab === 'exercises' && (
-            <ExercisePanel exercises={exercises} />
+            <ExercisePanel exercises={exercises} language={language} />
           )}
 
           {activeTab === 'tutor' && (
@@ -110,7 +149,6 @@ export default function LessonPage({ lesson, exercises, lessonNumber }) {
 }
 
 function formatContent(text) {
-  // Simple markdown bold: **text** → <strong>
   const parts = text.split(/\*\*(.+?)\*\*/g)
   return parts.map((part, i) =>
     i % 2 === 1

@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { lesson, exercises } from '../data/lesson1'
 import ExercisePanel from './ExercisePanel'
 import TutorChat from './TutorChat'
 import CodeEditor from './CodeEditor'
@@ -7,7 +6,7 @@ import OutputPanel from './OutputPanel'
 import { usePyodide } from '../hooks/usePyodide'
 import './LessonPage.css'
 
-export default function LessonPage() {
+export default function LessonPage({ lesson, exercises, lessonNumber }) {
   const [activeTab, setActiveTab] = useState('lesson')
   const [sandboxCode, setSandboxCode] = useState('# Prueba el código de los ejemplos aquí\nprint("¡Hola, Python!")\n')
   const [sandboxOutput, setSandboxOutput] = useState(null)
@@ -28,7 +27,7 @@ export default function LessonPage() {
       {/* Columna izquierda: contenido de la lección */}
       <aside className="lesson-sidebar">
         <div className="lesson-meta">
-          <span className="lesson-badge">Lección 1</span>
+          <span className="lesson-badge">Lección {lessonNumber}</span>
           <h1 className="lesson-title">{lesson.title}</h1>
           <p className="lesson-subtitle">{lesson.subtitle}</p>
         </div>

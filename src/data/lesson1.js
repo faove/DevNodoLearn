@@ -1,48 +1,89 @@
 export const lesson = {
   id: 'lesson-1',
-  title: 'Variables y Tipos de Datos',
-  subtitle: 'Lección 1 — Python básico',
+  title: 'Introducción a la Computación',
+  subtitle: 'Lección 1 — Fundamentos',
   sections: [
     {
       id: 's1',
-      title: '¿Qué es una variable?',
-      content: `Una **variable** es como una caja con nombre donde guardas información. En Python no necesitas declarar el tipo — solo asigna y listo.`,
-      example: `nombre = "Ana"\nedad = 17\naltura = 1.65\nprint(nombre, "tiene", edad, "años")`,
+      title: 'Historia de la computación',
+      content: `Las computadoras no siempre fueron pantallas y teclados. El camino hasta las máquinas que usamos hoy tomó siglos.
+
+En los años **1800s**, Charles Babbage diseñó la **Máquina Analítica** — una calculadora mecánica que nunca llegó a construirse del todo, pero cuyo diseño contenía las ideas básicas de una computadora moderna. Ada Lovelace escribió el primer **algoritmo** pensado para esa máquina, convirtiéndose en la primera programadora de la historia.
+
+En **1936**, Alan Turing definió matemáticamente qué es una computadora con su modelo teórico llamado **Máquina de Turing** — la base conceptual de toda la informática moderna.
+
+En **1945** nació la **ENIAC**, la primera computadora electrónica de propósito general. Ocupaba una sala entera y pesaba 27 toneladas. Hoy, tu teléfono es millones de veces más potente.
+
+La evolución siguió: transistores (1950s), circuitos integrados (1960s), microprocesadores (1970s), computadoras personales (1980s), internet (1990s) y hoy en día: computación en la nube, inteligencia artificial y dispositivos en el bolsillo.`,
+      example: `# La computación avanzó siguiendo la Ley de Moore:
+# cada ~2 años, la cantidad de transistores en un chip se duplica.
+
+anno_eniac = 1945
+transistores_eniac = 18000  # válvulas de vacío
+
+anno_actual = 2024
+transistores_moderno = 100_000_000_000  # 100 mil millones
+
+crecimiento = transistores_moderno / transistores_eniac
+print(f"Crecimiento desde ENIAC: x{crecimiento:,.0f}")
+print(f"En {anno_actual - anno_eniac} años")`,
     },
     {
       id: 's2',
-      title: 'Tipos básicos',
-      content: `Python tiene 4 tipos primitivos que usarás todo el tiempo:
+      title: '¿Qué es un programa? ¿Qué hace una computadora?',
+      content: `Una **computadora** es una máquina que ejecuta instrucciones. No piensa, no entiende, no improvisa — solo sigue pasos exactos, uno por uno, a una velocidad increíble.
 
-- **str** — texto: \`"Hola"\`, \`'mundo'\`
-- **int** — número entero: \`42\`, \`-8\`
-- **float** — número decimal: \`3.14\`, \`-0.5\`
-- **bool** — verdadero o falso: \`True\`, \`False\``,
-      example: `texto = "Python"\nnumero = 100\ndecimal = 9.99\nactivo = True\n\nprint(type(texto))\nprint(type(numero))\nprint(type(decimal))\nprint(type(activo))`,
+Un **programa** es una secuencia de instrucciones escritas por humanos en un lenguaje que la computadora puede procesar. Cada vez que abres una app, escuchas música o buscas algo en Google, hay millones de instrucciones ejecutándose en fracciones de segundo.
+
+El proceso básico de cualquier computadora se puede resumir en tres pasos:
+
+**Entrada** → **Procesamiento** → **Salida**
+
+- **Entrada**: datos que ingresan (teclado, micrófono, sensores, archivos).
+- **Procesamiento**: la CPU ejecuta instrucciones sobre esos datos.
+- **Salida**: el resultado se muestra o guarda (pantalla, archivo, red).
+
+Cuando escribes código en Python, estás dando instrucciones precisas. La computadora las ejecuta exactamente como las escribiste — ni más, ni menos.`,
+      example: `# Este programa demuestra Entrada → Procesamiento → Salida
+
+# Entrada: datos definidos en el código
+nombre = "Carlos"
+edad = 20
+
+# Procesamiento: calcular año de nacimiento
+anno_actual = 2024
+anno_nacimiento = anno_actual - edad
+
+# Salida: mostrar el resultado
+print(f"Hola, {nombre}!")
+print(f"Naciste aproximadamente en {anno_nacimiento}.")`,
     },
     {
       id: 's3',
-      title: 'Operaciones básicas',
-      content: `Con variables numéricas puedes hacer operaciones matemáticas. Con strings puedes **concatenar** (unir) usando \`+\`.`,
-      example: `a = 10\nb = 3\n\nprint(a + b)   # 13\nprint(a - b)   # 7\nprint(a * b)   # 30\nprint(a / b)   # 3.333...\nprint(a // b)  # 3  (división entera)\nprint(a % b)   # 1  (módulo/resto)\n\ngreeting = "Hola, " + "mundo!"\nprint(greeting)`,
-    },
-    {
-      id: 's4',
-      title: 'Operadores de comparación',
-      content: `Ya conoces los operadores aritméticos (\`+\`, \`-\`, \`*\`, \`/\`). Ahora los de **comparación**: siempre devuelven \`True\` o \`False\`.
+      title: 'Hardware vs Software. Sistema operativo.',
+      content: `Toda computadora tiene dos grandes componentes que trabajan juntos:
 
-Operadores disponibles: \`==\` (igual), \`!=\` (diferente), \`>\` (mayor), \`<\` (menor), \`>=\` (mayor o igual), \`<=\` (menor o igual).
+**Hardware** es la parte física — todo lo que puedes tocar: el procesador (CPU), la memoria RAM, el disco duro, la tarjeta gráfica, el teclado. El hardware ejecuta instrucciones, pero por sí solo no hace nada sin un programa.
 
-También funcionan con strings: \`"Ana" == "ana"\` devuelve \`False\` porque las mayúsculas importan.`,
-      example: `edad = 18\nminimo = 18\n\nprint(edad == minimo)   # True\nprint(edad > 20)        # False\nprint(edad >= minimo)   # True\nprint(edad != 0)        # True\n\n# También con strings\nprint("python" == "python")  # True\nprint("Ana" != "ana")        # True`,
-    },
-    {
-      id: 's5',
-      title: 'Condicionales: if / elif / else',
-      content: `Los condicionales permiten que tu programa **tome decisiones**. Python usa la **indentación** (4 espacios) para definir los bloques de código.
+**Software** es la parte lógica — los programas, el código, las instrucciones. No tiene peso ni forma física. Se divide en:
 
-Escribe \`if condición:\` y en la línea siguiente, con 4 espacios, el código a ejecutar. Usa \`elif\` para más condiciones y \`else\` como caso por defecto. Tanto \`elif\` como \`else\` son opcionales.`,
-      example: `nota = 75\n\nif nota >= 90:\n    print("Excelente")\nelif nota >= 70:\n    print("Aprobado")\nelif nota >= 50:\n    print("Suficiente")\nelse:\n    print("Reprobado")\n\n# Condicional simple\ntemperatura = 35\nif temperatura > 30:\n    print("Hace calor hoy")`,
+- **Software de sistema**: administra el hardware. El más importante es el **Sistema Operativo**.
+- **Software de aplicación**: los programas que usas día a día (navegador, editor, juegos).
+
+El **Sistema Operativo** (Windows, macOS, Linux) es el intermediario entre el hardware y las aplicaciones. Gestiona la memoria, organiza archivos, controla los dispositivos y permite que varios programas corran al mismo tiempo. Sin él, cada programa tendría que hablar directamente con el hardware — un caos.
+
+Cuando escribes Python, tu código habla con el intérprete de Python, que habla con el sistema operativo, que habla con el hardware.`,
+      example: `# Python puede interactuar con el sistema operativo
+import platform
+import os
+
+# Información del sistema operativo
+print("Sistema operativo:", platform.system())
+print("Versión:", platform.version())
+print("Procesador:", platform.processor())
+
+# Directorio actual (el SO gestiona el sistema de archivos)
+print("Directorio actual:", os.getcwd())`,
     },
   ],
 }
@@ -50,97 +91,48 @@ Escribe \`if condición:\` y en la línea siguiente, con 4 espacios, el código 
 export const exercises = [
   {
     id: 'ex1',
-    title: 'Tu primera variable',
-    description: 'Crea una variable llamada `ciudad` con el nombre de tu ciudad y luego imprímela.',
-    hint: 'Recuerda: el texto va entre comillas. Luego usa print() para mostrarla.',
-    starterCode: '# Crea tu variable aquí\n\n',
+    title: 'Tu primer programa',
+    description: 'Todo programador empieza con lo mismo. Escribe un programa que imprima: `¡Hola, mundo!`',
+    hint: 'Usa print() con el texto entre comillas.',
+    starterCode: '# Tu primer programa\n\n',
     validate(output, code) {
-      const hasVar = /ciudad\s*=\s*["'].+["']/.test(code)
-      const hasPrint = /print/.test(code)
-      const hasOutput = output.trim().length > 0 && !output.includes('sin salida')
-      if (!hasVar) return { ok: false, message: 'Crea una variable llamada ciudad con texto.' }
-      if (!hasPrint) return { ok: false, message: 'Usa print() para mostrar la variable.' }
-      if (!hasOutput) return { ok: false, message: 'El programa no produjo salida. ¿Ejecutaste print()?' }
-      return { ok: true, message: '¡Perfecto! Creaste y mostraste tu primera variable.' }
+      const hasPrint = /print\s*\(/.test(code)
+      const hasOutput = output.trim().length > 0
+      if (!hasPrint) return { ok: false, message: 'Usa print() para mostrar el mensaje.' }
+      if (!hasOutput) return { ok: false, message: 'El programa no produjo ninguna salida.' }
+      return { ok: true, message: '¡Bienvenido a la programación! Ya eres programador.' }
     },
   },
   {
     id: 'ex2',
-    title: 'Tipos de datos',
-    description: 'Crea tres variables: `nombre` (str), `puntaje` (int) y `aprobado` (bool). Luego imprime el tipo de cada una usando `type()`.',
-    hint: 'Ejemplo: type(nombre) te dice el tipo de la variable nombre.',
-    starterCode: '# Tus variables\nnombre = \npuntaje = \naprobado = \n\n# Imprime sus tipos\n',
+    title: 'Entrada → Procesamiento → Salida',
+    description: 'Demuestra el ciclo básico: crea variables `producto` y `precio`, calcula el precio con 16% de IVA e imprímelo.',
+    hint: 'IVA = precio * 0.16. El precio final = precio + IVA.',
+    starterCode: 'producto = "Laptop"\nprecio = 1000\n\n# Calcula el IVA y el precio final\n\n# Imprime el resultado\n',
     validate(output, code) {
-      const hasStr = /nombre\s*=\s*["']/.test(code)
-      const hasInt = /puntaje\s*=\s*\d+/.test(code)
-      const hasBool = /aprobado\s*=\s*(True|False)/.test(code)
-      const hasType = /type\(/.test(code)
-      if (!hasStr) return { ok: false, message: "nombre debe ser un texto (str). Ej: nombre = \"Ana\"" }
-      if (!hasInt) return { ok: false, message: 'puntaje debe ser un número entero. Ej: puntaje = 95' }
-      if (!hasBool) return { ok: false, message: 'aprobado debe ser True o False.' }
-      if (!hasType) return { ok: false, message: 'Usa type() para ver el tipo de las variables.' }
-      return { ok: true, message: '¡Excelente! Conoces los tipos básicos de Python.' }
+      const hasCalc = /\*\s*0\.16|\*\s*16/.test(code)
+      const hasPrint = /print/.test(code)
+      const hasOutput = output.trim().length > 0
+      if (!hasCalc) return { ok: false, message: 'Calcula el IVA multiplicando por 0.16.' }
+      if (!hasPrint) return { ok: false, message: 'Usa print() para mostrar el resultado.' }
+      if (!hasOutput) return { ok: false, message: 'El programa no produjo salida.' }
+      return { ok: true, message: '¡Correcto! Aplicaste el ciclo Entrada → Procesamiento → Salida.' }
     },
   },
   {
     id: 'ex3',
-    title: 'Calculadora simple',
-    description: 'Crea dos variables numéricas `a` y `b`. Calcula e imprime su suma, resta, multiplicación y división.',
-    hint: 'Usa los operadores: + - * /',
-    starterCode: 'a = \nb = \n\n# Operaciones\n',
+    title: 'Información del sistema',
+    description: 'Importa el módulo `platform` y usa `platform.system()` y `platform.processor()` para imprimir información de la computadora donde corre tu código.',
+    hint: 'Primero escribe: import platform. Luego llama a las funciones dentro de print().',
+    starterCode: '# Importa el módulo\n\n# Imprime el sistema operativo y el procesador\n',
     validate(output, code) {
-      const hasA = /a\s*=\s*-?\d+/.test(code)
-      const hasB = /b\s*=\s*-?\d+/.test(code)
-      const ops = ['+', '-', '*', '/'].filter(op => {
-        // avoid matching variable assignment lines
-        return new RegExp(`[ab]\\s*\\${op}|\\${op}\\s*[ab]`).test(code)
-      })
-      if (!hasA || !hasB) return { ok: false, message: 'Define las variables a y b con números.' }
-      if (ops.length < 3) return { ok: false, message: `Usa al menos 3 operaciones. Lleva: ${ops.join(' ')}` }
-      const lines = output.trim().split('\n').filter(l => l.trim())
-      if (lines.length < 3) return { ok: false, message: 'Imprime los resultados de las operaciones.' }
-      return { ok: true, message: '¡Calculadora lista! Ya puedes operar con variables numéricas.' }
-    },
-  },
-  {
-    id: 'ex4',
-    title: 'Comparando valores',
-    description: 'Crea dos variables `x` y `y` con números distintos. Luego imprime el resultado de compararlas con `==`, `>` y `<=`.',
-    hint: 'Los operadores de comparación devuelven True o False. Úsalos dentro de print().',
-    starterCode: 'x = \ny = \n\n# Imprime las comparaciones\n',
-    validate(output, code) {
-      const hasX = /x\s*=\s*-?\d+/.test(code)
-      const hasY = /y\s*=\s*-?\d+/.test(code)
-      const hasEq = /==/.test(code)
-      const hasGt = />/.test(code)
-      const hasLte = /<=/.test(code)
-      const lines = output.trim().split('\n').filter(l => l.trim())
-      if (!hasX || !hasY) return { ok: false, message: 'Define las variables x e y con números.' }
-      if (!hasEq) return { ok: false, message: 'Usa el operador == para comparar igualdad.' }
-      if (!hasGt) return { ok: false, message: 'Usa el operador > para comparar mayor que.' }
-      if (!hasLte) return { ok: false, message: 'Usa el operador <= para comparar menor o igual.' }
-      if (lines.length < 3) return { ok: false, message: 'Imprime el resultado de las tres comparaciones.' }
-      return { ok: true, message: '¡Correcto! Los operadores de comparación son la base de toda decisión.' }
-    },
-  },
-  {
-    id: 'ex5',
-    title: 'Semáforo con if / elif / else',
-    description: 'Crea una variable `color` con un valor: `"rojo"`, `"amarillo"` o `"verde"`. Usa `if / elif / else` para imprimir la instrucción correspondiente: "Detente", "Precaución" o "Avanza".',
-    hint: 'Compara el string con == dentro del if. Recuerda la indentación de 4 espacios.',
-    starterCode: 'color = "rojo"  # prueba también "amarillo" y "verde"\n\n# Tu condicional aquí\n',
-    validate(output, code) {
-      const hasIf = /if\s+/.test(code)
-      const hasElif = /elif\s+/.test(code)
-      const hasElse = /else\s*:/.test(code)
-      const out = output.trim().toLowerCase()
-      const validOutputs = ['detente', 'precaución', 'precaucion', 'avanza']
-      const hasValidOutput = validOutputs.some(v => out.includes(v))
-      if (!hasIf) return { ok: false, message: 'Necesitas al menos un if.' }
-      if (!hasElif) return { ok: false, message: 'Agrega elif para manejar el color amarillo.' }
-      if (!hasElse) return { ok: false, message: 'Agrega else para el caso por defecto.' }
-      if (!hasValidOutput) return { ok: false, message: 'El programa debe imprimir "Detente", "Precaución" o "Avanza" según el color.' }
-      return { ok: true, message: '¡Semáforo funcionando! Dominas if / elif / else.' }
+      const hasImport = /import\s+platform/.test(code)
+      const hasSystem = /platform\.system\(\)/.test(code)
+      const hasOutput = output.trim().length > 0 && !output.includes('Error')
+      if (!hasImport) return { ok: false, message: 'Importa el módulo con: import platform' }
+      if (!hasSystem) return { ok: false, message: 'Usa platform.system() para obtener el sistema operativo.' }
+      if (!hasOutput) return { ok: false, message: 'El programa no produjo salida o tuvo un error.' }
+      return { ok: true, message: '¡Tu código habló con el sistema operativo! Eso es hardware + software en acción.' }
     },
   },
 ]

@@ -11,7 +11,7 @@ export default function App() {
           <nav className="breadcrumb">
             <span>Python</span>
             <span className="sep">/</span>
-            <span className="current">Lección 1: Variables y Tipos</span>
+            <span className="current">Lección 1: Introducción a la Computación</span>
           </nav>
         </div>
       </header>

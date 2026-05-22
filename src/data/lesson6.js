@@ -1,7 +1,7 @@
 export const lesson = {
   id: 'lesson-6',
   title: 'JavaScript Esencial',
-  subtitle: 'Lección 6 — Fase 3: JavaScript',
+  subtitle: 'Lección 6 — Fase 2: JavaScript',
   language: 'html',
   sections: [
     {

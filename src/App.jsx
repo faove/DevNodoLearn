@@ -9,6 +9,8 @@ import './App.css'
 const PHASE_LABELS = {
   1: 'Fase 1: Python',
   2: 'Fase 2: Web',
+  3: 'Fase 3: Git & GitHub',
+  4: 'Fase 4: PHP & Laravel',
 }
 
 function MainApp() {

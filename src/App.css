@@ -169,14 +169,45 @@
   color: var(--error);
 }
 
-/* Fase 2: verde en la nav */
+/* Fase 2: verde */
 .phase-group[data-phase="2"] {
   --accent: #10b981;
   --accent-hover: #059669;
 }
 
-/* Fase 2: verde en el contenido principal */
 .app[data-phase="2"] {
   --accent: #10b981;
   --accent-hover: #059669;
+}
+
+/* Fase 3: naranja */
+.phase-group[data-phase="3"] {
+  --accent: #f97316;
+  --accent-hover: #ea580c;
+}
+
+.app[data-phase="3"] {
+  --accent: #f97316;
+  --accent-hover: #ea580c;
+}
+
+/* Fase 4: blanco con letras azules */
+.phase-group[data-phase="4"] {
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+}
+
+.phase-group[data-phase="4"] .nav-num {
+  background: #ffffff;
+  color: #1d4ed8;
+}
+
+.phase-group[data-phase="4"] .lessons-nav-item.active .nav-num {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.app[data-phase="4"] {
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
 }

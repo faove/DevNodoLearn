@@ -19,14 +19,35 @@ const HTML_STARTER = `<!DOCTYPE html>
 </html>
 `
 
+const BASH_STARTER = `# Escribe y estudia comandos Git aquí
+# (ejecútalos en tu terminal local)
+
+git status
+git log --oneline
+`
+
+const PHP_STARTER = `<?php
+// Escribe y estudia código PHP aquí
+// (PHP se ejecuta en el servidor, no en el navegador)
+
+$saludo = "¡Hola, PHP 8!";
+echo $saludo . PHP_EOL;
+`
+
 export default function LessonPage({ lesson, exercises, lessonNumber }) {
   const language = lesson.language || 'python'
   const isHtml = language === 'html'
+  const isBash = language === 'bash'
+  const isPhp  = language === 'php'
+  const isScriptOnly = isBash || isPhp
 
   const [activeTab, setActiveTab] = useState('lesson')
-  const [sandboxCode, setSandboxCode] = useState(
-    isHtml ? HTML_STARTER : '# Prueba el código de los ejemplos aquí\nprint("¡Hola, Python!")\n'
-  )
+  const [sandboxCode, setSandboxCode] = useState(() => {
+    if (isHtml) return HTML_STARTER
+    if (isBash) return BASH_STARTER
+    if (isPhp)  return PHP_STARTER
+    return '# Prueba el código de los ejemplos aquí\nprint("¡Hola, Python!")\n'
+  })
   const [sandboxOutput, setSandboxOutput] = useState(null)
   const [sandboxPreview, setSandboxPreview] = useState(null)
   const [sandboxRunning, setSandboxRunning] = useState(false)
@@ -37,6 +58,13 @@ export default function LessonPage({ lesson, exercises, lessonNumber }) {
   async function runSandbox() {
     if (isHtml) {
       setSandboxPreview(sandboxCode)
+      return
+    }
+    if (isScriptOnly) {
+      const msg = isPhp
+        ? '⚡ PHP se ejecuta en el servidor. Copia este código en tu entorno local (XAMPP, Laragon, php -S localhost:8000).'
+        : '⚡ Copia estos comandos en tu terminal para ejecutarlos.\nGit requiere un repositorio local — no puede correr en el navegador.'
+      setSandboxOutput({ text: msg, isError: false })
       return
     }
     setSandboxRunning(true)
@@ -69,6 +97,7 @@ export default function LessonPage({ lesson, exercises, lessonNumber }) {
                     onClick={() => {
                       setSandboxCode(section.example)
                       if (isHtml) setSandboxPreview(null)
+                      if (isScriptOnly) setSandboxOutput(null)
                       setActiveTab('sandbox')
                     }}
                   >

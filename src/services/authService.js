@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace(/\/$/, '')
 
 function getToken() {
   return localStorage.getItem('auth_token')
@@ -7,21 +7,21 @@ function getToken() {
 async function request(path, options = {}) {
   const token = getToken()
   const res = await fetch(`${API_URL}${path}`, {
+    ...options,
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
-    ...options,
   })
 
-  const data = await res.json()
+  const data = await res.json().catch(() => null)
 
   if (!res.ok) {
-    const message = data?.message || data?.errors
-      ? Object.values(data.errors ?? {})[0]?.[0] ?? data.message
-      : 'Error inesperado'
+    const message = Object.values(data?.errors ?? {})[0]?.[0]
+      ?? data?.message
+      ?? 'Error inesperado'
     throw new Error(message)
   }
 
@@ -31,7 +31,7 @@ async function request(path, options = {}) {
 export async function login(email, password) {
   const data = await request('/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email: email.trim(), password }),
   })
   localStorage.setItem('auth_token', data.token)
   return data.user
@@ -40,7 +40,12 @@ export async function login(email, password) {
 export async function register(name, email, password) {
   const data = await request('/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ name, email, password, password_confirmation: password }),
+    body: JSON.stringify({
+      name: name.trim(),
+      email: email.trim(),
+      password,
+      password_confirmation: password,
+    }),
   })
   localStorage.setItem('auth_token', data.token)
   return data.user

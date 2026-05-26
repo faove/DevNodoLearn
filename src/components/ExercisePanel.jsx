@@ -6,6 +6,8 @@ import './ExercisePanel.css'
 
 export default function ExercisePanel({ exercises, language = 'python' }) {
   const isHtml = language === 'html'
+  const isBash = language === 'bash'
+  const isScriptOnly = isBash || language === 'php'
 
   const [currentIdx, setCurrentIdx] = useState(0)
   const [codes, setCodes] = useState(() =>
@@ -28,6 +30,13 @@ export default function ExercisePanel({ exercises, language = 'python' }) {
 
     if (isHtml) {
       setOutputs(prev => ({ ...prev, [ex.id]: { html: code } }))
+      const validation = ex.validate('', code)
+      setResults(prev => ({ ...prev, [ex.id]: validation }))
+      setRunning(false)
+      return
+    }
+
+    if (isScriptOnly) {
       const validation = ex.validate('', code)
       setResults(prev => ({ ...prev, [ex.id]: validation }))
       setRunning(false)

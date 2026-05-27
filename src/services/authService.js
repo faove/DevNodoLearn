@@ -1,4 +1,12 @@
-const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace(/\/$/, '')
+function resolveApiUrl() {
+  const raw = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace(/\/$/, '')
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:' && raw.startsWith('http://')) {
+    return raw.replace(/^http:\/\//, 'https://')
+  }
+  return raw
+}
+
+const API_URL = resolveApiUrl()
 
 function getToken() {
   return localStorage.getItem('auth_token')

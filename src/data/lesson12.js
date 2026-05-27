@@ -985,7 +985,7 @@ use Illuminate\\Support\\Facades\\Gate;
     validate(_output, code) {
       if (!/Gate::define\s*\(\s*['"]editar-posts['"]/i.test(code))
         return { ok: false, message: 'Define el Gate con `Gate::define("editar-posts", function(...) { ... })`.' }
-      if (!/in_array\s*\(/.test(code) && !/(===\s*['"]admin['"].*===\s*['"]editor['"]|===\s*['"]editor['"].*===\s*['"]admin['"]).test(code))
+      if (!/in_array\s*\(/.test(code) && !/(===\s*['"]admin['"].*===\s*['"]editor['"]|===\s*['"]editor['"].*===\s*['"]admin['"])/.test(code))
         return { ok: false, message: 'El Gate debe comprobar que el role sea "admin" o "editor". Usa `in_array($user->role, ["admin", "editor"])`.' }
       if (!/'admin'/.test(code) && !/"admin"/.test(code))
         return { ok: false, message: 'El Gate debe incluir el role `"admin"` entre los permitidos.' }

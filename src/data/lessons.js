@@ -8,6 +8,7 @@ import { lesson as lesson7, exercises as exercises7 } from './lesson7'
 import { lesson as lesson8, exercises as exercises8 } from './lesson8'
 import { lesson as lesson9, exercises as exercises9 } from './lesson9'
 import { lesson as lesson10, exercises as exercises10 } from './lesson10'
+import { lesson as lesson11, exercises as exercises11 } from './lesson11'
 
 export const lessons = [
   { ...lesson1, exercises: exercises1, phase: 1 },
@@ -20,4 +21,5 @@ export const lessons = [
   { ...lesson8, exercises: exercises8, phase: 3 },
   { ...lesson9, exercises: exercises9, phase: 4 },
   { ...lesson10, exercises: exercises10, phase: 4 },
+  { ...lesson11, exercises: exercises11, phase: 4 },
 ]

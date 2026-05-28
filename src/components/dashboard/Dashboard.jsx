@@ -44,8 +44,21 @@ export default function Dashboard({ onEnterCourse }) {
 
   return (
     <div className="dashboard-page">
+      <div className="auth-scanlines" />
+
+      <div className="auth-particles">
+        <div className="auth-particle" />
+        <div className="auth-particle" />
+        <div className="auth-particle" />
+        <div className="auth-particle" />
+        <div className="auth-particle" />
+        <div className="auth-particle" />
+        <div className="auth-particle" />
+        <div className="auth-particle" />
+      </div>
+
       <header className="dashboard-header">
-        <div className="auth-logo" style={{ marginBottom: 0 }}>
+        <div className="auth-logo dashboard-logo">
           DevNodo<span className="auth-logo-accent">Learn</span>
         </div>
         <div className="dashboard-header-actions">
@@ -60,6 +73,7 @@ export default function Dashboard({ onEnterCourse }) {
 
       <main className="dashboard-main">
         <div className="dashboard-welcome">
+          <div className="auth-section-tag">SYS_DASH // PANEL</div>
           <h1>Tu espacio de aprendizaje</h1>
           <p>Elige un curso para continuar o actualiza tu perfil.</p>
         </div>
@@ -75,6 +89,11 @@ export default function Dashboard({ onEnterCourse }) {
                   className="course-card"
                   onClick={() => onEnterCourse(course.id)}
                 >
+                  <div className="auth-corner auth-corner--tl" />
+                  <div className="auth-corner auth-corner--tr" />
+                  <div className="auth-corner auth-corner--bl" />
+                  <div className="auth-corner auth-corner--br" />
+
                   <div className="course-card-meta">
                     <span className="course-card-badge">Disponible</span>
                     <span className="course-card-stats">
@@ -99,6 +118,12 @@ export default function Dashboard({ onEnterCourse }) {
 
           <aside>
             <div className="dashboard-profile-panel">
+              <div className="auth-corner auth-corner--tl" />
+              <div className="auth-corner auth-corner--tr" />
+              <div className="auth-corner auth-corner--bl" />
+              <div className="auth-corner auth-corner--br" />
+
+              <div className="auth-section-tag">USR_PROFILE // EDIT</div>
               <h2>Mi perfil</h2>
               <p className="auth-subtitle">Actualiza tu información personal</p>
 
@@ -145,8 +170,12 @@ export default function Dashboard({ onEnterCourse }) {
                   <p className="dashboard-profile-hint">Mínimo 8 caracteres si deseas cambiarla.</p>
                 </div>
 
-                <button className="auth-btn" type="submit" disabled={saving}>
-                  {saving ? 'Guardando...' : 'Guardar cambios'}
+                <button
+                  className={`auth-btn${saving ? ' auth-loading' : ''}`}
+                  type="submit"
+                  disabled={saving}
+                >
+                  {saving ? '▸ Guardando...' : '▸ Guardar cambios'}
                 </button>
               </form>
             </div>

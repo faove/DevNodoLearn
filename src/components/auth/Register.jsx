@@ -31,11 +31,34 @@ export default function Register({ onGoLogin }) {
 
   return (
     <div className="auth-page">
+      {/* Scanlines overlay */}
+      <div className="auth-scanlines" />
+
+      {/* Floating particles */}
+      <div className="auth-particles">
+        <div className="auth-particle" />
+        <div className="auth-particle" />
+        <div className="auth-particle" />
+        <div className="auth-particle" />
+        <div className="auth-particle" />
+        <div className="auth-particle" />
+        <div className="auth-particle" />
+        <div className="auth-particle" />
+      </div>
+
       <div className="auth-logo">
         DevNodo<span className="auth-logo-accent">Learn</span>
       </div>
 
       <div className="auth-card">
+        {/* Corner decorations */}
+        <div className="auth-corner auth-corner--tl" />
+        <div className="auth-corner auth-corner--tr" />
+        <div className="auth-corner auth-corner--bl" />
+        <div className="auth-corner auth-corner--br" />
+
+        <div className="auth-section-tag">SYS_AUTH // REGISTRO</div>
+
         <h1>Crear cuenta</h1>
         <p className="auth-subtitle">Únete y empieza a aprender programación</p>
 
@@ -81,8 +104,12 @@ export default function Register({ onGoLogin }) {
             />
           </div>
 
-          <button className="auth-btn" type="submit" disabled={loading}>
-            {loading ? 'Creando cuenta...' : 'Crear cuenta'}
+          <button
+            className={`auth-btn${loading ? ' auth-loading' : ''}`}
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? '▸ Creando cuenta...' : '▸ Crear cuenta'}
           </button>
         </form>
 

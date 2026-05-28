@@ -70,3 +70,16 @@ export async function logout() {
 export async function getMe() {
   return request('/auth/me')
 }
+
+export async function updateProfile({ name, email, password }) {
+  const body = { name, email }
+  if (password) {
+    body.password = password
+    body.password_confirmation = password
+  }
+  const data = await request('/auth/profile', {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
+  return data.user ?? data
+}

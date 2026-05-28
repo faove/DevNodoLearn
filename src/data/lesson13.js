@@ -563,7 +563,7 @@ return [
 //
 // MAIL_MAILER=log
 // MAIL_FROM_ADDRESS="hello@example.com"
-// MAIL_FROM_NAME="${APP_NAME}"
+// MAIL_FROM_NAME="\${APP_NAME}"
 //
 // STRIPE_KEY=
 // STRIPE_SECRET=

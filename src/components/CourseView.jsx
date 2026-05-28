@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import LessonPage from './LessonPage'
 import { lessons } from '../data/lessons'
+import { markNodeComplete, nodeIdForLessonIndex } from '../data/devNodoPath'
 
 const PHASE_LABELS = {
   1: 'Fase 1: Python',
@@ -10,9 +11,9 @@ const PHASE_LABELS = {
   4: 'Fase 4: PHP & Laravel',
 }
 
-export default function CourseView({ onBack }) {
+export default function CourseView({ onBack, initialLessonIndex = 0 }) {
   const { user, logout } = useAuth()
-  const [activeIndex, setActiveIndex] = useState(0)
+  const [activeIndex, setActiveIndex] = useState(initialLessonIndex)
   const current = lessons[activeIndex]
   const phases = [...new Set(lessons.map(l => l.phase))]
 
@@ -21,7 +22,17 @@ export default function CourseView({ onBack }) {
       <header className="app-header">
         <div className="app-header-inner">
           <button type="button" className="back-dashboard-btn" onClick={onBack}>
-            ← Inicio
+            ← Mapa Dev-Node
+          </button>
+          <button
+            type="button"
+            className="back-dashboard-btn"
+            onClick={() => {
+              markNodeComplete(user?.id, nodeIdForLessonIndex(activeIndex))
+              onBack()
+            }}
+          >
+            ✓ Completar nodo
           </button>
           <span className="logo">DevNodo<span className="logo-accent">Learn</span></span>
           <nav className="breadcrumb">

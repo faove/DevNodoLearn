@@ -1,5 +1,18 @@
+const LOCAL_API_URL = 'http://localhost:8000/api'
+
+function isLocalFrontend() {
+  if (typeof window === 'undefined') return false
+  const host = window.location.hostname
+  return host === 'localhost' || host === '127.0.0.1'
+}
+
 function resolveApiUrl() {
-  const raw = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace(/\/$/, '')
+  // dist built for production is served on localhost:3001 — still use local API
+  if (isLocalFrontend()) {
+    return LOCAL_API_URL
+  }
+
+  const raw = (import.meta.env.VITE_API_URL || LOCAL_API_URL).replace(/\/$/, '')
   if (typeof window !== 'undefined' && window.location.protocol === 'https:' && raw.startsWith('http://')) {
     return raw.replace(/^http:\/\//, 'https://')
   }

@@ -50,3 +50,13 @@ async function request(path, options = {}) {
 export async function getCourses() {
   return request('/courses')
 }
+
+export async function getCoursePath(courseSlug) {
+  return request(`/courses/${courseSlug}/path`)
+}
+
+export async function completeNode(courseSlug, nodeId) {
+  return request(`/courses/${courseSlug}/nodes/${nodeId}/complete`, {
+    method: 'POST',
+  })
+}

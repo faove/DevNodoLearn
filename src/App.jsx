@@ -11,6 +11,7 @@ function MainApp() {
   const { user, loading } = useAuth()
   const [authView, setAuthView] = useState('login')
   const [appView, setAppView] = useState('dashboard')
+  const [courseSlug, setCourseSlug] = useState('programacion-jovenes')
   const [lessonIndex, setLessonIndex] = useState(0)
   const [devNodoKey, setDevNodoKey] = useState(0)
 
@@ -36,6 +37,7 @@ function MainApp() {
   if (appView === 'course') {
     return (
       <CourseView
+        courseSlug={courseSlug}
         initialLessonIndex={lessonIndex}
         onBack={backToDevNodo}
       />
@@ -46,6 +48,7 @@ function MainApp() {
     return (
       <DevNodo
         key={devNodoKey}
+        courseSlug={courseSlug}
         onBack={() => setAppView('dashboard')}
         onStartLesson={index => {
           setLessonIndex(index)
@@ -57,7 +60,10 @@ function MainApp() {
 
   return (
     <Dashboard
-      onEnterCourse={() => setAppView('devnodo')}
+      onEnterCourse={slug => {
+        setCourseSlug(slug)
+        setAppView('devnodo')
+      }}
     />
   )
 }

@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useAuth } from '../context/AuthContext'
+import { getCoursePath } from '../services/courseService'
 import {
-  PATH,
   RANKS,
   RANK_SIZE,
   CHAPTER_TITLES,
-  getCompletedNodes,
 } from '../data/devNodoPath'
 import './DevNodo.css'
 
@@ -17,14 +15,16 @@ const xFor = i => {
   return cycle[i % cycle.length]
 }
 
-function layoutPositions() {
-  return PATH.map((_, i) => ({ x: xFor(i), y: Y_OFFSET + i * Y_STEP }))
+function layoutPositions(count) {
+  return Array.from({ length: count }, (_, i) => ({ x: xFor(i), y: Y_OFFSET + i * Y_STEP }))
 }
 
-function computeStates(currentIdx, completed) {
-  return PATH.map((n, i) => {
+function computeStates(path, completed) {
+  return path.map((n, i) => {
     if (completed.includes(n.id)) return 'completed'
-    if (i === currentIdx) return 'active'
+    const activeIdx = path.findIndex(node => !completed.includes(node.id))
+    const safeActiveIdx = activeIdx === -1 ? path.length - 1 : activeIdx
+    if (i === safeActiveIdx) return 'active'
     return 'locked'
   })
 }
@@ -56,6 +56,7 @@ function HUD({
   xpToNext,
   totalXp,
   completedCount,
+  nodeCount,
   onBack,
 }) {
   const pct = Math.min(100, Math.round((xpInLevel / xpToNext) * 100))
@@ -100,7 +101,7 @@ function HUD({
       <div className="devnodo-hud-divider" />
 
       <div className="devnodo-hud-stats">
-        <StatChip label="NODES" value={completedCount} unit={`/${PATH.length}`} color="green" />
+        <StatChip label="NODES" value={completedCount} unit={`/${nodeCount}`} color="green" />
         <StatChip label="TOTAL_XP" value={totalXp.toLocaleString()} unit="" color="cyan" />
       </div>
     </header>
@@ -311,40 +312,48 @@ function NodeModal({ node, state, onClose, onStart }) {
   )
 }
 
-export default function DevNodo({ onBack, onStartLesson, onProgressChange }) {
-  const { user } = useAuth()
-  const storageKey = `devnodo-completed-${user?.id ?? 'guest'}`
-
-  const [completed, setCompleted] = useState(() => getCompletedNodes(user?.id))
+export default function DevNodo({ courseSlug = 'programacion-jovenes', onBack, onStartLesson, onProgressChange }) {
+  const [path, setPath] = useState([])
+  const [courseTitle, setCourseTitle] = useState('')
+  const [completed, setCompleted] = useState([])
+  const [totalXp, setTotalXp] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [openNode, setOpenNode] = useState(null)
 
   useEffect(() => {
-    setCompleted(getCompletedNodes(user?.id))
-  }, [user?.id])
+    let cancelled = false
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(completed))
-    } catch {
-      /* ignore */
+    async function loadPath() {
+      setLoading(true)
+      setError('')
+      try {
+        const data = await getCoursePath(courseSlug)
+        if (cancelled) return
+        setPath(data.path ?? [])
+        setCourseTitle(data.course?.title ?? '')
+        setCompleted(data.progress?.completedNodeIds ?? [])
+        setTotalXp(data.progress?.totalXp ?? 0)
+        onProgressChange?.(data.progress?.completedNodeIds ?? [])
+      } catch (err) {
+        if (!cancelled) setError(err.message)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     }
-    onProgressChange?.(completed)
-  }, [completed, storageKey, onProgressChange])
 
-  const currentIdx = PATH.findIndex(n => !completed.includes(n.id))
-  const safeCurrentIdx = currentIdx === -1 ? PATH.length - 1 : currentIdx
+    loadPath()
+    return () => {
+      cancelled = true
+    }
+  }, [courseSlug, onProgressChange])
 
   const states = useMemo(
-    () => computeStates(safeCurrentIdx, completed),
-    [safeCurrentIdx, completed],
+    () => computeStates(path, completed),
+    [path, completed],
   )
-  const positions = useMemo(() => layoutPositions(), [])
-  const totalHeight = Y_OFFSET + PATH.length * Y_STEP + 200
-
-  const totalXp = completed.reduce((sum, id) => {
-    const node = PATH.find(n => n.id === id)
-    return sum + (node?.xp ?? 0)
-  }, 0)
+  const positions = useMemo(() => layoutPositions(path.length), [path.length])
+  const totalHeight = Y_OFFSET + path.length * Y_STEP + 200
 
   const rankLvl = Math.min(RANKS.length - 1, Math.floor(totalXp / RANK_SIZE))
   const xpInLevel = totalXp - rankLvl * RANK_SIZE
@@ -352,15 +361,15 @@ export default function DevNodo({ onBack, onStartLesson, onProgressChange }) {
 
   const chapterMarkers = useMemo(() => {
     const seen = new Set()
-    return PATH.map((n, i) => {
+    return path.map((n, i) => {
       if (seen.has(n.chapter)) return null
       seen.add(n.chapter)
-      return { chapter: n.chapter, y: positions[i].y }
+      return { chapter: n.chapter, y: positions[i]?.y ?? 0 }
     }).filter(Boolean)
-  }, [positions])
+  }, [path, positions])
 
   const openNodeState = openNode
-    ? states[PATH.findIndex(n => n.id === openNode.id)]
+    ? states[path.findIndex(n => n.id === openNode.id)]
     : null
 
   function handleNodeClick(node) {
@@ -370,6 +379,25 @@ export default function DevNodo({ onBack, onStartLesson, onProgressChange }) {
   function handleStart(node) {
     setOpenNode(null)
     onStartLesson(node.lessonIndex)
+  }
+
+  if (loading) {
+    return (
+      <div className="devnodo-root devnodo-root--loading">
+        <p className="devnodo-loading-text">Cargando mapa Dev-Node...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="devnodo-root devnodo-root--loading">
+        <p className="devnodo-loading-text devnodo-loading-text--error">{error}</p>
+        <button type="button" className="devnodo-btn-back" onClick={onBack}>
+          ← INICIO
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -382,18 +410,23 @@ export default function DevNodo({ onBack, onStartLesson, onProgressChange }) {
         xpToNext={RANK_SIZE}
         totalXp={totalXp}
         completedCount={completed.length}
+        nodeCount={path.length}
         onBack={onBack}
       />
 
       <div className="devnodo-path-wrap">
         <div className="devnodo-path-inner" style={{ height: totalHeight }}>
+          {courseTitle && (
+            <div className="devnodo-course-title">{courseTitle}</div>
+          )}
+
           {chapterMarkers.map(cm => (
             <ChapterMarker key={cm.chapter} chapter={cm.chapter} y={cm.y} />
           ))}
 
           <Cables positions={positions} states={states} totalHeight={totalHeight} />
 
-          {PATH.map((n, i) => (
+          {path.map((n, i) => (
             <HexNode
               key={n.id}
               node={n}
@@ -406,7 +439,7 @@ export default function DevNodo({ onBack, onStartLesson, onProgressChange }) {
 
           <div className="devnodo-end-marker" style={{ top: totalHeight - 100 }}>
             <div className="devnodo-end-title">FULLSTACK DEVELOPER</div>
-            <div className="devnodo-end-sub">// END_OF_PATH · 13 NODES</div>
+            <div className="devnodo-end-sub">// END_OF_PATH · {path.length} NODES</div>
           </div>
         </div>
       </div>

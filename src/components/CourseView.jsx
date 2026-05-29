@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import LessonPage from './LessonPage'
 import { lessons } from '../data/lessons'
-import { markNodeComplete, nodeIdForLessonIndex } from '../data/devNodoPath'
+import { completeNode } from '../services/courseService'
+import { nodeIdForLessonIndex } from '../data/devNodoPath'
 
 const PHASE_LABELS = {
   1: 'Fase 1: Python',
@@ -11,9 +12,10 @@ const PHASE_LABELS = {
   4: 'Fase 4: PHP & Laravel',
 }
 
-export default function CourseView({ onBack, initialLessonIndex = 0 }) {
+export default function CourseView({ courseSlug = 'programacion-jovenes', onBack, initialLessonIndex = 0 }) {
   const { user, logout } = useAuth()
   const [activeIndex, setActiveIndex] = useState(initialLessonIndex)
+  const [completing, setCompleting] = useState(false)
   const current = lessons[activeIndex]
   const phases = [...new Set(lessons.map(l => l.phase))]
 
@@ -27,12 +29,20 @@ export default function CourseView({ onBack, initialLessonIndex = 0 }) {
           <button
             type="button"
             className="back-dashboard-btn"
-            onClick={() => {
-              markNodeComplete(user?.id, nodeIdForLessonIndex(activeIndex))
-              onBack()
+            disabled={completing}
+            onClick={async () => {
+              setCompleting(true)
+              try {
+                await completeNode(courseSlug, nodeIdForLessonIndex(activeIndex))
+                onBack()
+              } catch {
+                onBack()
+              } finally {
+                setCompleting(false)
+              }
             }}
           >
-            ✓ Completar nodo
+            {completing ? 'Guardando...' : '✓ Completar nodo'}
           </button>
           <span className="logo">DevNodo<span className="logo-accent">Learn</span></span>
           <nav className="breadcrumb">

@@ -797,3 +797,34 @@
   .devnodo-modal-title { font-size: 1.5rem; }
   .hex { --hex-size: 110px; }
 }
+
+.devnodo-root--loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 100vh;
+}
+
+.devnodo-loading-text {
+  margin: 0;
+  color: var(--ink-dim);
+  font-size: 0.95rem;
+}
+
+.devnodo-loading-text--error {
+  color: #ff6b6b;
+}
+
+.devnodo-course-title {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(0, 229, 255, 0.75);
+  white-space: nowrap;
+}

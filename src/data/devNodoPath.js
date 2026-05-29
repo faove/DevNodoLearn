@@ -1,28 +1,10 @@
-import { lessons } from './lessons'
+import { getCourse, DEFAULT_COURSE_SLUG } from './registry'
 
-export const RANKS = [
-  { lvl: 0, name: 'Bootloader', sub: 'Fundamentos de computación' },
-  { lvl: 1, name: 'Code Initiate', sub: 'Python básico' },
-  { lvl: 2, name: 'Logic Apprentice', sub: 'Python intermedio' },
-  { lvl: 3, name: 'Frontend Knight', sub: 'HTML, CSS y JavaScript' },
-  { lvl: 4, name: 'Version Keeper', sub: 'Git y GitHub' },
-  { lvl: 5, name: 'Backend Padawan', sub: 'PHP y Laravel' },
-  { lvl: 6, name: 'Fullstack Mage', sub: 'Proyecto final integrador' },
-]
+const defaultCourse = getCourse(DEFAULT_COURSE_SLUG)
 
-export const CHAPTER_TITLES = {
-  1: 'CH·01 / Python — Fundamentos',
-  2: 'CH·02 / Desarrollo Web',
-  3: 'CH·03 / Git & GitHub',
-  4: 'CH·04 / PHP & Laravel',
-}
-
-const TAG_BY_PHASE = {
-  1: 'python',
-  2: 'web',
-  3: 'git',
-  4: 'laravel',
-}
+export const RANKS = defaultCourse.ranks
+export const CHAPTER_TITLES = defaultCourse.chapterTitles
+export const RANK_SIZE = defaultCourse.rankSize
 
 function estimateXp(lesson) {
   const sections = lesson.sections?.length ?? 3
@@ -36,7 +18,10 @@ function estimateMins(lesson) {
   return sections * 8 + exercises * 6
 }
 
-export function buildPathFromLessons(lessonList = lessons) {
+export function buildPathFromLessons(
+  lessonList,
+  { tagByPhase = {}, maxPhase = 4 } = {},
+) {
   return lessonList.map((lesson, index) => {
     const num = index + 1
     const isLastInPhase =
@@ -52,16 +37,26 @@ export function buildPathFromLessons(lessonList = lessons) {
       sub: lesson.subtitle,
       xp: estimateXp(lesson),
       mins: estimateMins(lesson),
-      tag: isLastInPhase && lesson.phase < 4 ? 'boss' : TAG_BY_PHASE[lesson.phase] ?? 'core',
+      tag:
+        isLastInPhase && lesson.phase < maxPhase
+          ? 'boss'
+          : tagByPhase[lesson.phase] ?? 'core',
       exerciseCount: lesson.exercises?.length ?? 0,
       sectionCount: lesson.sections?.length ?? 0,
     }
   })
 }
 
-export const PATH = buildPathFromLessons()
+export function buildPathForCourse(slug) {
+  const course = getCourse(slug)
+  if (!course) return []
+  return buildPathFromLessons(course.lessons, {
+    tagByPhase: course.tagByPhase,
+    maxPhase: course.maxPhase,
+  })
+}
 
-export const RANK_SIZE = 500
+export const PATH = buildPathForCourse(DEFAULT_COURSE_SLUG)
 
 export function getStorageKey(userId) {
   return `devnodo-completed-${userId ?? 'guest'}`

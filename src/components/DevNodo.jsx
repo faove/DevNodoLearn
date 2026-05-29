@@ -1,10 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getCoursePath } from '../services/courseService'
-import {
-  RANKS,
-  RANK_SIZE,
-  CHAPTER_TITLES,
-} from '../data/devNodoPath'
+import { getCourse } from '../data/registry'
 import './DevNodo.css'
 
 const Y_STEP = 220
@@ -167,11 +163,11 @@ function HexNode({ node, state, x, y, onClick }) {
   )
 }
 
-function ChapterMarker({ chapter, y }) {
+function ChapterMarker({ chapter, y, chapterTitles }) {
   return (
     <div className="devnodo-chapter-marker" style={{ top: y - 60 }}>
       <div className="devnodo-chapter-row">
-        <span className="devnodo-section-tag">{CHAPTER_TITLES[chapter]}</span>
+        <span className="devnodo-section-tag">{chapterTitles[chapter]}</span>
         <div className="devnodo-chapter-line" />
       </div>
     </div>
@@ -313,6 +309,11 @@ function NodeModal({ node, state, onClose, onStart }) {
 }
 
 export default function DevNodo({ courseSlug = 'programacion-jovenes', onBack, onStartLesson, onProgressChange }) {
+  const courseConfig = useMemo(() => getCourse(courseSlug), [courseSlug])
+  const ranks = courseConfig?.ranks ?? []
+  const chapterTitles = courseConfig?.chapterTitles ?? {}
+  const rankSize = courseConfig?.rankSize ?? 500
+
   const [path, setPath] = useState([])
   const [courseTitle, setCourseTitle] = useState('')
   const [completed, setCompleted] = useState([])
@@ -355,9 +356,9 @@ export default function DevNodo({ courseSlug = 'programacion-jovenes', onBack, o
   const positions = useMemo(() => layoutPositions(path.length), [path.length])
   const totalHeight = Y_OFFSET + path.length * Y_STEP + 200
 
-  const rankLvl = Math.min(RANKS.length - 1, Math.floor(totalXp / RANK_SIZE))
-  const xpInLevel = totalXp - rankLvl * RANK_SIZE
-  const rank = RANKS[rankLvl]
+  const rankLvl = Math.min(ranks.length - 1, Math.floor(totalXp / rankSize))
+  const xpInLevel = totalXp - rankLvl * rankSize
+  const rank = ranks[rankLvl]
 
   const chapterMarkers = useMemo(() => {
     const seen = new Set()
@@ -407,7 +408,7 @@ export default function DevNodo({ courseSlug = 'programacion-jovenes', onBack, o
       <HUD
         rank={rank}
         xpInLevel={xpInLevel}
-        xpToNext={RANK_SIZE}
+        xpToNext={rankSize}
         totalXp={totalXp}
         completedCount={completed.length}
         nodeCount={path.length}
@@ -421,7 +422,12 @@ export default function DevNodo({ courseSlug = 'programacion-jovenes', onBack, o
           )}
 
           {chapterMarkers.map(cm => (
-            <ChapterMarker key={cm.chapter} chapter={cm.chapter} y={cm.y} />
+            <ChapterMarker
+              key={cm.chapter}
+              chapter={cm.chapter}
+              y={cm.y}
+              chapterTitles={chapterTitles}
+            />
           ))}
 
           <Cables positions={positions} states={states} totalHeight={totalHeight} />

@@ -1,22 +1,45 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import LessonPage from './LessonPage'
-import { lessons } from '../data/lessons'
+import { getCourse } from '../data/registry'
 import { completeNode } from '../services/courseService'
 import { nodeIdForLessonIndex } from '../data/devNodoPath'
 
-const PHASE_LABELS = {
-  1: 'Fase 1: Python',
-  2: 'Fase 2: Web',
-  3: 'Fase 3: Git & GitHub',
-  4: 'Fase 4: PHP & Laravel',
-}
-
 export default function CourseView({ courseSlug = 'programacion-jovenes', onBack, initialLessonIndex = 0 }) {
   const { user, logout } = useAuth()
+  const course = getCourse(courseSlug)
   const [activeIndex, setActiveIndex] = useState(initialLessonIndex)
   const [completing, setCompleting] = useState(false)
+
+  if (!course) {
+    return (
+      <div className="app">
+        <div className="app-body" style={{ padding: '2rem', color: 'var(--text-muted)' }}>
+          <p>Curso no encontrado: {courseSlug}</p>
+          <button type="button" className="back-dashboard-btn" onClick={onBack}>
+            ← Volver
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const { lessons, phaseLabels } = course
   const current = lessons[activeIndex]
+
+  if (!current) {
+    return (
+      <div className="app">
+        <div className="app-body" style={{ padding: '2rem', color: 'var(--text-muted)' }}>
+          <p>Lección no disponible.</p>
+          <button type="button" className="back-dashboard-btn" onClick={onBack}>
+            ← Volver
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   const phases = [...new Set(lessons.map(l => l.phase))]
 
   return (
@@ -46,7 +69,7 @@ export default function CourseView({ courseSlug = 'programacion-jovenes', onBack
           </button>
           <span className="logo">DevNodo<span className="logo-accent">Learn</span></span>
           <nav className="breadcrumb">
-            <span>{PHASE_LABELS[current.phase]}</span>
+            <span>{phaseLabels[current.phase]}</span>
             <span className="sep">/</span>
             <span className="current">Lección {activeIndex + 1}: {current.title}</span>
           </nav>
@@ -68,7 +91,7 @@ export default function CourseView({ courseSlug = 'programacion-jovenes', onBack
             return (
               <div key={phase} className="phase-group" data-phase={phase}>
                 {pi > 0 && <span className="phase-divider" />}
-                <span className="lessons-nav-heading">{PHASE_LABELS[phase]}</span>
+                <span className="lessons-nav-heading">{phaseLabels[phase]}</span>
                 {phaseLessons.map(l => (
                   <button
                     key={l.id}

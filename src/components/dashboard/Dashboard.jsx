@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { updateProfile } from '../../services/authService'
-import { courses } from '../../data/courses'
+import { getCourses } from '../../services/courseService'
 import '../auth/Auth.css'
 import './Dashboard.css'
 
@@ -13,11 +13,36 @@ export default function Dashboard({ onEnterCourse }) {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [saving, setSaving] = useState(false)
+  const [courses, setCourses] = useState([])
+  const [coursesLoading, setCoursesLoading] = useState(true)
+  const [coursesError, setCoursesError] = useState('')
 
   useEffect(() => {
     setName(user?.name ?? '')
     setEmail(user?.email ?? '')
   }, [user])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadCourses() {
+      setCoursesLoading(true)
+      setCoursesError('')
+      try {
+        const data = await getCourses()
+        if (!cancelled) setCourses(data)
+      } catch (err) {
+        if (!cancelled) setCoursesError(err.message)
+      } finally {
+        if (!cancelled) setCoursesLoading(false)
+      }
+    }
+
+    loadCourses()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   async function handleProfileSubmit(e) {
     e.preventDefault()
@@ -81,7 +106,12 @@ export default function Dashboard({ onEnterCourse }) {
         <div className="dashboard-grid">
           <section>
             <h2 className="dashboard-section-title">Mis cursos</h2>
+            {coursesError && <div className="auth-error">{coursesError}</div>}
             <div className="dashboard-courses">
+              {coursesLoading && <p className="dashboard-courses-status">Cargando cursos...</p>}
+              {!coursesLoading && courses.length === 0 && !coursesError && (
+                <p className="dashboard-courses-status">No hay cursos disponibles.</p>
+              )}
               {courses.map(course => (
                 <button
                   key={course.id}

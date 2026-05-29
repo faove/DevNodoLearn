@@ -219,6 +219,12 @@
   gap: 20px;
 }
 
+.dashboard-courses-status {
+  margin: 0;
+  color: rgba(200, 220, 255, 0.65);
+  font-size: 0.95rem;
+}
+
 .course-card {
   position: relative;
   background: linear-gradient(180deg, rgba(12, 15, 32, 0.96), rgba(7, 9, 22, 0.96));

@@ -114,33 +114,7 @@ export default function CourseView({ courseSlug = 'programacion-jovenes', onBack
           </div>
         </div>
       </header>
-
-      <nav className="courseview-nav" aria-label="Lecciones">
-        {phases.map((phase, pi) => {
-          const phaseLessons = lessons
-            .map((l, i) => ({ ...l, globalIndex: i }))
-            .filter(l => l.phase === phase)
-          return (
-            <div key={phase} className="courseview-phase-group" data-phase={phase}>
-              {pi > 0 && <span className="courseview-phase-divider" />}
-              <span className="courseview-nav-heading">{phaseLabels[phase]}</span>
-              {phaseLessons.map(l => (
-                <button
-                  key={l.id}
-                  type="button"
-                  className={`courseview-nav-item ${activeIndex === l.globalIndex ? 'active' : ''}`}
-                  onClick={() => setActiveIndex(l.globalIndex)}
-                >
-                  <span className="courseview-nav-num">
-                    {String(l.globalIndex + 1).padStart(2, '0')}
-                  </span>
-                  <span className="courseview-nav-title">{l.title}</span>
-                </button>
-              ))}
-            </div>
-          )
-        })}
-      </nav>
+    
 
       <main className="courseview-main">
         <LessonPage

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import ExercisePanel from './ExercisePanel'
 import TutorChat from './TutorChat'
 import CodeEditor from './CodeEditor'
@@ -39,8 +39,9 @@ export default function LessonPage({
   exercises,
   lessonNumber,
   initialExerciseIndex = 0,
+  completedExerciseIds = [],
   onExerciseChange,
-  onResumePointChange,
+  onExerciseComplete,
   openExercisesTab = false,
 }) {
   const language = lesson.language || 'python'
@@ -50,6 +51,12 @@ export default function LessonPage({
   const isScriptOnly = isBash || isPhp
 
   const [activeTab, setActiveTab] = useState(openExercisesTab ? 'exercises' : 'lesson')
+
+  useEffect(() => {
+    if (openExercisesTab) {
+      setActiveTab('exercises')
+    }
+  }, [openExercisesTab])
   const [sandboxCode, setSandboxCode] = useState(() => {
     if (isHtml) return HTML_STARTER
     if (isBash) return BASH_STARTER
@@ -174,8 +181,9 @@ export default function LessonPage({
               exercises={exercises}
               language={language}
               initialIndex={initialExerciseIndex}
+              completedExerciseIds={completedExerciseIds}
               onIndexChange={onExerciseChange}
-              onResumePointChange={onResumePointChange}
+              onExerciseComplete={onExerciseComplete}
             />
           )}
 

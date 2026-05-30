@@ -4,12 +4,23 @@ import OutputPanel from './OutputPanel'
 import { usePyodide } from '../hooks/usePyodide'
 import './ExercisePanel.css'
 
+const STORED_OK_MESSAGE = 'Ejercicio completado previamente.'
+
+function buildInitialResults(exercises, completedExerciseIds) {
+  return Object.fromEntries(
+    exercises
+      .filter(ex => completedExerciseIds.includes(ex.id))
+      .map(ex => [ex.id, { ok: true, message: STORED_OK_MESSAGE }])
+  )
+}
+
 export default function ExercisePanel({
   exercises,
   language = 'python',
   initialIndex = 0,
+  completedExerciseIds = [],
   onIndexChange,
-  onResumePointChange,
+  onExerciseComplete,
 }) {
   const isHtml = language === 'html'
   const isBash = language === 'bash'
@@ -20,7 +31,9 @@ export default function ExercisePanel({
   const [codes, setCodes] = useState(() =>
     Object.fromEntries(exercises.map(ex => [ex.id, ex.starterCode]))
   )
-  const [results, setResults] = useState({})
+  const [results, setResults] = useState(() =>
+    buildInitialResults(exercises, completedExerciseIds)
+  )
   const [outputs, setOutputs] = useState({})
   const [running, setRunning] = useState(false)
   const [showHint, setShowHint] = useState(false)
@@ -36,18 +49,23 @@ export default function ExercisePanel({
     setCurrentIdx(next)
   }, [initialIndex, exercises])
 
+  useEffect(() => {
+    setResults(prev => ({
+      ...prev,
+      ...buildInitialResults(exercises, completedExerciseIds),
+    }))
+  }, [completedExerciseIds, exercises])
+
   function selectExercise(index) {
     setCurrentIdx(index)
     setShowHint(false)
     onIndexChange?.(index)
   }
 
-  function saveResumePoint(currentIndex, validation) {
-    if (!validation?.ok || !onResumePointChange) return
-
-    const nextResume = Math.min(currentIndex + 1, exercises.length - 1)
-    if (nextResume > currentIndex) {
-      onResumePointChange(nextResume)
+  function applyValidation(currentIndex, validation) {
+    setResults(prev => ({ ...prev, [ex.id]: validation }))
+    if (validation?.ok) {
+      onExerciseComplete?.(ex.id, currentIndex, validation)
     }
   }
 
@@ -58,16 +76,14 @@ export default function ExercisePanel({
     if (isHtml) {
       setOutputs(prev => ({ ...prev, [ex.id]: { html: code } }))
       const validation = ex.validate('', code)
-      setResults(prev => ({ ...prev, [ex.id]: validation }))
-      saveResumePoint(currentIdx, validation)
+      applyValidation(currentIdx, validation)
       setRunning(false)
       return
     }
 
     if (isScriptOnly) {
       const validation = ex.validate('', code)
-      setResults(prev => ({ ...prev, [ex.id]: validation }))
-      saveResumePoint(currentIdx, validation)
+      applyValidation(currentIdx, validation)
       setRunning(false)
       return
     }
@@ -78,8 +94,7 @@ export default function ExercisePanel({
 
     if (!error) {
       const validation = ex.validate(out, code)
-      setResults(prev => ({ ...prev, [ex.id]: validation }))
-      saveResumePoint(currentIdx, validation)
+      applyValidation(currentIdx, validation)
     } else {
       setResults(prev => ({ ...prev, [ex.id]: null }))
     }

@@ -61,12 +61,23 @@ export async function completeNode(courseSlug, nodeId) {
   })
 }
 
-export async function saveCourseProgress(courseSlug, { lessonIndex, exerciseIndex }) {
+export async function getLessonProgress(courseSlug, nodeId) {
+  return request(`/courses/${courseSlug}/nodes/${nodeId}/lesson-progress`)
+}
+
+export async function saveCourseProgress(courseSlug, { lessonIndex, exerciseIndex, nodeId, completedExerciseId }) {
+  const body = {
+    lesson_index: lessonIndex,
+    exercise_index: exerciseIndex,
+  }
+  if (nodeId) {
+    body.node_id = nodeId
+  }
+  if (completedExerciseId) {
+    body.completed_exercise_id = completedExerciseId
+  }
   return request(`/courses/${courseSlug}/progress`, {
     method: 'PUT',
-    body: JSON.stringify({
-      lesson_index: lessonIndex,
-      exercise_index: exerciseIndex,
-    }),
+    body: JSON.stringify(body),
   })
 }

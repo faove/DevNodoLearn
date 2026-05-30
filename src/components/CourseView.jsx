@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import LessonPage from './LessonPage'
 import { getCourse } from '../data/registry'
-import { completeNode, getCoursePath, saveCourseProgress } from '../services/courseService'
+import { completeNode, getLessonProgress, saveCourseProgress } from '../services/courseService'
 import { nodeIdForLessonIndex } from '../data/devNodoPath'
 import './CourseView.css'
 
@@ -38,6 +38,7 @@ export default function CourseView({
   const course = getCourse(courseSlug)
   const [activeIndex, setActiveIndex] = useState(initialLessonIndex)
   const [activeExerciseIndex, setActiveExerciseIndex] = useState(initialExerciseIndex)
+  const [completedExerciseIds, setCompletedExerciseIds] = useState([])
   const [progressLoaded, setProgressLoaded] = useState(false)
   const [completing, setCompleting] = useState(false)
 
@@ -47,21 +48,20 @@ export default function CourseView({
     async function loadProgress() {
       setProgressLoaded(false)
       try {
-        const data = await getCoursePath(courseSlug)
+        const nodeId = nodeIdForLessonIndex(initialLessonIndex)
+        const lessonProgress = await getLessonProgress(courseSlug, nodeId)
         if (cancelled) return
 
-        const progress = data.progress ?? {}
         setActiveIndex(initialLessonIndex)
-
-        if (progress.activeLessonIndex === initialLessonIndex) {
-          setActiveExerciseIndex(progress.activeExerciseIndex ?? 0)
-        } else {
-          setActiveExerciseIndex(initialExerciseIndex)
-        }
+        setActiveExerciseIndex(
+          lessonProgress.activeExerciseIndex ?? initialExerciseIndex ?? 0
+        )
+        setCompletedExerciseIds(lessonProgress.completedExerciseIds ?? [])
       } catch {
         if (!cancelled) {
           setActiveIndex(initialLessonIndex)
           setActiveExerciseIndex(initialExerciseIndex)
+          setCompletedExerciseIds([])
         }
       } finally {
         if (!cancelled) setProgressLoaded(true)
@@ -74,8 +74,13 @@ export default function CourseView({
     }
   }, [courseSlug, initialLessonIndex, initialExerciseIndex])
 
-  const persistProgress = useCallback(async (lessonIndex, exerciseIndex) => {
-    await saveCourseProgress(courseSlug, { lessonIndex, exerciseIndex })
+  const persistProgress = useCallback(async (lessonIndex, exerciseIndex, completedExerciseId) => {
+    return saveCourseProgress(courseSlug, {
+      lessonIndex,
+      exerciseIndex,
+      nodeId: nodeIdForLessonIndex(lessonIndex),
+      completedExerciseId,
+    })
   }, [courseSlug])
 
   const handleExerciseChange = useCallback((exerciseIndex) => {
@@ -83,9 +88,24 @@ export default function CourseView({
     persistProgress(activeIndex, exerciseIndex).catch(() => {})
   }, [activeIndex, persistProgress])
 
-  const handleResumePointChange = useCallback((exerciseIndex) => {
-    persistProgress(activeIndex, exerciseIndex).catch(() => {})
-  }, [activeIndex, persistProgress])
+  const handleExerciseComplete = useCallback(async (exerciseId, exerciseIndex, validation) => {
+    if (!validation?.ok) return
+
+    const nextIndex = Math.min(
+      exerciseIndex + 1,
+      (course?.lessons[activeIndex]?.exercises.length ?? 1) - 1
+    )
+    const resumeIndex = nextIndex > exerciseIndex ? nextIndex : exerciseIndex
+
+    try {
+      const result = await persistProgress(activeIndex, resumeIndex, exerciseId)
+      setCompletedExerciseIds(result.completedExerciseIds ?? [])
+    } catch {
+      setCompletedExerciseIds(prev =>
+        prev.includes(exerciseId) ? prev : [...prev, exerciseId]
+      )
+    }
+  }, [activeIndex, course, persistProgress])
 
   const handleBack = useCallback(async () => {
     try {
@@ -126,6 +146,9 @@ export default function CourseView({
       </CourseViewShell>
     )
   }
+
+  const shouldOpenExercises =
+    activeExerciseIndex > 0 || completedExerciseIds.length > 0
 
   return (
     <CourseViewShell dataPhase={current.phase}>
@@ -187,14 +210,15 @@ export default function CourseView({
 
       <main className="courseview-main">
         <LessonPage
-          key={`${current.id}-${activeExerciseIndex}`}
+          key={current.id}
           lesson={current}
           exercises={current.exercises}
           lessonNumber={activeIndex + 1}
           initialExerciseIndex={activeExerciseIndex}
+          completedExerciseIds={completedExerciseIds}
           onExerciseChange={handleExerciseChange}
-          onResumePointChange={handleResumePointChange}
-          openExercisesTab={activeExerciseIndex > 0}
+          onExerciseComplete={handleExerciseComplete}
+          openExercisesTab={shouldOpenExercises}
         />
       </main>
     </CourseViewShell>

@@ -3,6 +3,8 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import Login from './components/auth/Login'
 import Register from './components/auth/Register'
 import Dashboard from './components/dashboard/Dashboard'
+import Profile from './components/dashboard/Profile'
+import DevNodo from './components/DevNodo'
 import CourseView from './components/CourseView'
 import './App.css'
 
@@ -10,6 +12,15 @@ function MainApp() {
   const { user, loading } = useAuth()
   const [authView, setAuthView] = useState('login')
   const [appView, setAppView] = useState('dashboard')
+  const [courseSlug, setCourseSlug] = useState('programacion-jovenes')
+  const [lessonIndex, setLessonIndex] = useState(0)
+  const [exerciseIndex, setExerciseIndex] = useState(0)
+  const [devNodoKey, setDevNodoKey] = useState(0)
+
+  function backToDevNodo() {
+    setDevNodoKey(k => k + 1)
+    setAppView('devnodo')
+  }
 
   if (loading) {
     return (
@@ -26,12 +37,44 @@ function MainApp() {
   }
 
   if (appView === 'course') {
-    return <CourseView onBack={() => setAppView('dashboard')} />
+    return (
+      <CourseView
+        courseSlug={courseSlug}
+        initialLessonIndex={lessonIndex}
+        initialExerciseIndex={exerciseIndex}
+        onBack={backToDevNodo}
+      />
+    )
+  }
+
+  if (appView === 'devnodo') {
+    return (
+      <DevNodo
+        key={devNodoKey}
+        courseSlug={courseSlug}
+        onBack={() => setAppView('dashboard')}
+        onStartLesson={(index, exIdx = 0) => {
+          setLessonIndex(index)
+          setExerciseIndex(exIdx)
+          setAppView('course')
+        }}
+      />
+    )
+  }
+
+  if (appView === 'profile') {
+    return (
+      <Profile onBack={() => setAppView('dashboard')} />
+    )
   }
 
   return (
     <Dashboard
-      onEnterCourse={() => setAppView('course')}
+      onEnterCourse={slug => {
+        setCourseSlug(slug)
+        setAppView('devnodo')
+      }}
+      onGoProfile={() => setAppView('profile')}
     />
   )
 }

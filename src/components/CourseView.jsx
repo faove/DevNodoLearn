@@ -1,78 +1,226 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import LessonPage from './LessonPage'
-import { lessons } from '../data/lessons'
+import { getCourse } from '../data/registry'
+import { completeNode, getLessonProgress, saveCourseProgress } from '../services/courseService'
+import { nodeIdForLessonIndex } from '../data/devNodoPath'
+import './CourseView.css'
 
-const PHASE_LABELS = {
-  1: 'Fase 1: Python',
-  2: 'Fase 2: Web',
-  3: 'Fase 3: Git & GitHub',
-  4: 'Fase 4: PHP & Laravel',
+function CourseViewShell({ dataPhase, children }) {
+  return (
+    <div className="courseview-root" data-phase={dataPhase}>
+      <div className="courseview-grid-floor" aria-hidden />
+      {children}
+    </div>
+  )
 }
 
-export default function CourseView({ onBack }) {
+function CourseViewEmpty({ message, onBack }) {
+  return (
+    <CourseViewShell dataPhase={1}>
+      <div className="courseview-empty">
+        <p className="courseview-empty-msg">{message}</p>
+        <button type="button" className="courseview-btn-back" onClick={onBack}>
+          ← VOLVER
+        </button>
+      </div>
+    </CourseViewShell>
+  )
+}
+
+export default function CourseView({
+  courseSlug = 'programacion-jovenes',
+  onBack,
+  initialLessonIndex = 0,
+  initialExerciseIndex = 0,
+}) {
   const { user, logout } = useAuth()
-  const [activeIndex, setActiveIndex] = useState(0)
+  const course = getCourse(courseSlug)
+  const [activeIndex, setActiveIndex] = useState(initialLessonIndex)
+  const [activeExerciseIndex, setActiveExerciseIndex] = useState(initialExerciseIndex)
+  const [completedExerciseIds, setCompletedExerciseIds] = useState([])
+  const [progressLoaded, setProgressLoaded] = useState(false)
+  const [completing, setCompleting] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadProgress() {
+      setProgressLoaded(false)
+      try {
+        const nodeId = nodeIdForLessonIndex(initialLessonIndex)
+        const lessonProgress = await getLessonProgress(courseSlug, nodeId)
+        if (cancelled) return
+
+        setActiveIndex(initialLessonIndex)
+        setActiveExerciseIndex(
+          lessonProgress.activeExerciseIndex ?? initialExerciseIndex ?? 0
+        )
+        setCompletedExerciseIds(lessonProgress.completedExerciseIds ?? [])
+      } catch {
+        if (!cancelled) {
+          setActiveIndex(initialLessonIndex)
+          setActiveExerciseIndex(initialExerciseIndex)
+          setCompletedExerciseIds([])
+        }
+      } finally {
+        if (!cancelled) setProgressLoaded(true)
+      }
+    }
+
+    loadProgress()
+    return () => {
+      cancelled = true
+    }
+  }, [courseSlug, initialLessonIndex, initialExerciseIndex])
+
+  const persistProgress = useCallback(async (lessonIndex, exerciseIndex, completedExerciseId) => {
+    return saveCourseProgress(courseSlug, {
+      lessonIndex,
+      exerciseIndex,
+      nodeId: nodeIdForLessonIndex(lessonIndex),
+      completedExerciseId,
+    })
+  }, [courseSlug])
+
+  const handleExerciseChange = useCallback((exerciseIndex) => {
+    setActiveExerciseIndex(exerciseIndex)
+    persistProgress(activeIndex, exerciseIndex).catch(() => {})
+  }, [activeIndex, persistProgress])
+
+  const handleExerciseComplete = useCallback(async (exerciseId, exerciseIndex, validation) => {
+    if (!validation?.ok) return
+
+    const nextIndex = Math.min(
+      exerciseIndex + 1,
+      (course?.lessons[activeIndex]?.exercises.length ?? 1) - 1
+    )
+    const resumeIndex = nextIndex > exerciseIndex ? nextIndex : exerciseIndex
+
+    try {
+      const result = await persistProgress(activeIndex, resumeIndex, exerciseId)
+      setCompletedExerciseIds(result.completedExerciseIds ?? [])
+    } catch {
+      setCompletedExerciseIds(prev =>
+        prev.includes(exerciseId) ? prev : [...prev, exerciseId]
+      )
+    }
+  }, [activeIndex, course, persistProgress])
+
+  const handleBack = useCallback(async () => {
+    try {
+      await persistProgress(activeIndex, activeExerciseIndex)
+    } catch {
+      // continue navigation even if save fails
+    }
+    onBack()
+  }, [activeIndex, activeExerciseIndex, onBack, persistProgress])
+
+  if (!course) {
+    return (
+      <CourseViewEmpty
+        message={<>Curso no encontrado: <code>{courseSlug}</code></>}
+        onBack={onBack}
+      />
+    )
+  }
+
+  const { lessons, phaseLabels } = course
   const current = lessons[activeIndex]
-  const phases = [...new Set(lessons.map(l => l.phase))]
+
+  if (!current) {
+    return (
+      <CourseViewEmpty
+        message="Lección no disponible."
+        onBack={onBack}
+      />
+    )
+  }
+
+  if (!progressLoaded) {
+    return (
+      <CourseViewShell dataPhase={current.phase}>
+        <div className="courseview-empty">
+          <p className="courseview-empty-msg">Cargando progreso...</p>
+        </div>
+      </CourseViewShell>
+    )
+  }
+
+  const shouldOpenExercises =
+    activeExerciseIndex > 0 || completedExerciseIds.length > 0
 
   return (
-    <div className="app" data-phase={current.phase}>
-      <header className="app-header">
-        <div className="app-header-inner">
-          <button type="button" className="back-dashboard-btn" onClick={onBack}>
-            ← Inicio
+    <CourseViewShell dataPhase={current.phase}>
+      <header className="courseview-hud">
+        <button type="button" className="courseview-btn-back" onClick={handleBack}>
+          ← MAPA
+        </button>
+
+        <div className="courseview-hud-brand">
+          <div className="courseview-hud-logo">
+            <div className="courseview-hud-logo-outer" />
+            <div className="courseview-hud-logo-inner">
+              <span>D</span>
+            </div>
+          </div>
+          <div>
+            <div className="courseview-hud-title-main">DEV-NODE</div>
+            <div className="courseview-hud-title-sub">LEARN · SESSION</div>
+          </div>
+        </div>
+
+        <div className="courseview-hud-divider" />
+
+        <nav className="courseview-breadcrumb" aria-label="Ubicación">
+          <span className="courseview-section-tag">{phaseLabels[current.phase]}</span>
+          <span className="courseview-breadcrumb-sep">/</span>
+          <span className="courseview-breadcrumb-current">
+            L_{String(activeIndex + 1).padStart(2, '0')} · {current.title}
+          </span>
+        </nav>
+
+        <div className="courseview-hud-actions">
+          <button
+            type="button"
+            className="courseview-btn-neon"
+            disabled={completing}
+            onClick={async () => {
+              setCompleting(true)
+              try {
+                await completeNode(courseSlug, nodeIdForLessonIndex(activeIndex))
+                onBack()
+              } catch {
+                onBack()
+              } finally {
+                setCompleting(false)
+              }
+            }}
+          >
+            {completing ? 'GUARDANDO...' : '✓ COMPLETAR'}
           </button>
-          <span className="logo">DevNodo<span className="logo-accent">Learn</span></span>
-          <nav className="breadcrumb">
-            <span>{PHASE_LABELS[current.phase]}</span>
-            <span className="sep">/</span>
-            <span className="current">Lección {activeIndex + 1}: {current.title}</span>
-          </nav>
-          <div className="header-user">
-            <span className="user-name">{user.name}</span>
-            <button className="logout-btn" type="button" onClick={logout}>
-              Cerrar sesión
+          <div className="courseview-hud-user">
+            <span className="courseview-user-name">{user.name}</span>
+            <button className="courseview-btn-ghost" type="button" onClick={logout}>
+              LOGOUT
             </button>
           </div>
         </div>
       </header>
 
-      <div className="app-body">
-        <nav className="lessons-nav">
-          {phases.map((phase, pi) => {
-            const phaseLessons = lessons
-              .map((l, i) => ({ ...l, globalIndex: i }))
-              .filter(l => l.phase === phase)
-            return (
-              <div key={phase} className="phase-group" data-phase={phase}>
-                {pi > 0 && <span className="phase-divider" />}
-                <span className="lessons-nav-heading">{PHASE_LABELS[phase]}</span>
-                {phaseLessons.map(l => (
-                  <button
-                    key={l.id}
-                    type="button"
-                    className={`lessons-nav-item ${activeIndex === l.globalIndex ? 'active' : ''}`}
-                    onClick={() => setActiveIndex(l.globalIndex)}
-                  >
-                    <span className="nav-num">{l.globalIndex + 1}</span>
-                    <span className="nav-title">{l.title}</span>
-                  </button>
-                ))}
-              </div>
-            )
-          })}
-        </nav>
-
-        <main className="app-main">
-          <LessonPage
-            key={current.id}
-            lesson={current}
-            exercises={current.exercises}
-            lessonNumber={activeIndex + 1}
-          />
-        </main>
-      </div>
-    </div>
+      <main className="courseview-main">
+        <LessonPage
+          key={current.id}
+          lesson={current}
+          exercises={current.exercises}
+          lessonNumber={activeIndex + 1}
+          initialExerciseIndex={activeExerciseIndex}
+          completedExerciseIds={completedExerciseIds}
+          onExerciseChange={handleExerciseChange}
+          onExerciseComplete={handleExerciseComplete}
+          openExercisesTab={shouldOpenExercises}
+        />
+      </main>
+    </CourseViewShell>
   )
 }

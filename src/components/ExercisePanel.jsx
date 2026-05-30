@@ -1,19 +1,39 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import CodeEditor from './CodeEditor'
 import OutputPanel from './OutputPanel'
 import { usePyodide } from '../hooks/usePyodide'
 import './ExercisePanel.css'
 
-export default function ExercisePanel({ exercises, language = 'python' }) {
+const STORED_OK_MESSAGE = 'Ejercicio completado previamente.'
+
+function buildInitialResults(exercises, completedExerciseIds) {
+  return Object.fromEntries(
+    exercises
+      .filter(ex => completedExerciseIds.includes(ex.id))
+      .map(ex => [ex.id, { ok: true, message: STORED_OK_MESSAGE }])
+  )
+}
+
+export default function ExercisePanel({
+  exercises,
+  language = 'python',
+  initialIndex = 0,
+  completedExerciseIds = [],
+  onIndexChange,
+  onExerciseComplete,
+}) {
   const isHtml = language === 'html'
   const isBash = language === 'bash'
   const isScriptOnly = isBash || language === 'php'
 
-  const [currentIdx, setCurrentIdx] = useState(0)
+  const safeInitial = Math.min(Math.max(0, initialIndex), Math.max(0, exercises.length - 1))
+  const [currentIdx, setCurrentIdx] = useState(safeInitial)
   const [codes, setCodes] = useState(() =>
     Object.fromEntries(exercises.map(ex => [ex.id, ex.starterCode]))
   )
-  const [results, setResults] = useState({})
+  const [results, setResults] = useState(() =>
+    buildInitialResults(exercises, completedExerciseIds)
+  )
   const [outputs, setOutputs] = useState({})
   const [running, setRunning] = useState(false)
   const [showHint, setShowHint] = useState(false)
@@ -24,6 +44,31 @@ export default function ExercisePanel({ exercises, language = 'python' }) {
   const result = results[ex.id]
   const output = outputs[ex.id]
 
+  useEffect(() => {
+    const next = Math.min(Math.max(0, initialIndex), Math.max(0, exercises.length - 1))
+    setCurrentIdx(next)
+  }, [initialIndex, exercises])
+
+  useEffect(() => {
+    setResults(prev => ({
+      ...prev,
+      ...buildInitialResults(exercises, completedExerciseIds),
+    }))
+  }, [completedExerciseIds, exercises])
+
+  function selectExercise(index) {
+    setCurrentIdx(index)
+    setShowHint(false)
+    onIndexChange?.(index)
+  }
+
+  function applyValidation(currentIndex, validation) {
+    setResults(prev => ({ ...prev, [ex.id]: validation }))
+    if (validation?.ok) {
+      onExerciseComplete?.(ex.id, currentIndex, validation)
+    }
+  }
+
   async function handleRun() {
     setRunning(true)
     setShowHint(false)
@@ -31,14 +76,14 @@ export default function ExercisePanel({ exercises, language = 'python' }) {
     if (isHtml) {
       setOutputs(prev => ({ ...prev, [ex.id]: { html: code } }))
       const validation = ex.validate('', code)
-      setResults(prev => ({ ...prev, [ex.id]: validation }))
+      applyValidation(currentIdx, validation)
       setRunning(false)
       return
     }
 
     if (isScriptOnly) {
       const validation = ex.validate('', code)
-      setResults(prev => ({ ...prev, [ex.id]: validation }))
+      applyValidation(currentIdx, validation)
       setRunning(false)
       return
     }
@@ -49,7 +94,7 @@ export default function ExercisePanel({ exercises, language = 'python' }) {
 
     if (!error) {
       const validation = ex.validate(out, code)
-      setResults(prev => ({ ...prev, [ex.id]: validation }))
+      applyValidation(currentIdx, validation)
     } else {
       setResults(prev => ({ ...prev, [ex.id]: null }))
     }
@@ -67,7 +112,7 @@ export default function ExercisePanel({ exercises, language = 'python' }) {
             <button
               key={e.id}
               className={`progress-tab ${i === currentIdx ? 'active' : ''} ${results[e.id]?.ok ? 'done' : ''}`}
-              onClick={() => { setCurrentIdx(i); setShowHint(false) }}
+              onClick={() => selectExercise(i)}
             >
               {results[e.id]?.ok ? '✓' : i + 1}
             </button>
@@ -101,7 +146,7 @@ export default function ExercisePanel({ exercises, language = 'python' }) {
         {currentIdx < exercises.length - 1 && result?.ok && (
           <button
             className="next-btn"
-            onClick={() => { setCurrentIdx(i => i + 1); setShowHint(false) }}
+            onClick={() => selectExercise(currentIdx + 1)}
           >
             Siguiente ejercicio →
           </button>

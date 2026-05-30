@@ -84,8 +84,15 @@ export async function getMe() {
   return request('/auth/me')
 }
 
-export async function updateProfile({ name, email, password }) {
-  const body = { name, email }
+export async function updateProfile({ name, email, password, phone, address, city, country }) {
+  const body = {
+    name,
+    email,
+    phone: phone?.trim() || null,
+    address: address?.trim() || null,
+    city: city?.trim() || null,
+    country: country?.trim() || null,
+  }
   if (password) {
     body.password = password
     body.password_confirmation = password

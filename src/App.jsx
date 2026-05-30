@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import Login from './components/auth/Login'
 import Register from './components/auth/Register'
 import Dashboard from './components/dashboard/Dashboard'
+import Profile from './components/dashboard/Profile'
 import DevNodo from './components/DevNodo'
 import CourseView from './components/CourseView'
 import './App.css'
@@ -58,12 +59,19 @@ function MainApp() {
     )
   }
 
+  if (appView === 'profile') {
+    return (
+      <Profile onBack={() => setAppView('dashboard')} />
+    )
+  }
+
   return (
     <Dashboard
       onEnterCourse={slug => {
         setCourseSlug(slug)
         setAppView('devnodo')
       }}
+      onGoProfile={() => setAppView('profile')}
     />
   )
 }

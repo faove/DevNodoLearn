@@ -4,6 +4,29 @@ import LessonPage from './LessonPage'
 import { getCourse } from '../data/registry'
 import { completeNode } from '../services/courseService'
 import { nodeIdForLessonIndex } from '../data/devNodoPath'
+import './CourseView.css'
+
+function CourseViewShell({ dataPhase, children }) {
+  return (
+    <div className="courseview-root" data-phase={dataPhase}>
+      <div className="courseview-grid-floor" aria-hidden />
+      {children}
+    </div>
+  )
+}
+
+function CourseViewEmpty({ message, onBack }) {
+  return (
+    <CourseViewShell dataPhase={1}>
+      <div className="courseview-empty">
+        <p className="courseview-empty-msg">{message}</p>
+        <button type="button" className="courseview-btn-back" onClick={onBack}>
+          ← VOLVER
+        </button>
+      </div>
+    </CourseViewShell>
+  )
+}
 
 export default function CourseView({ courseSlug = 'programacion-jovenes', onBack, initialLessonIndex = 0 }) {
   const { user, logout } = useAuth()
@@ -13,14 +36,10 @@ export default function CourseView({ courseSlug = 'programacion-jovenes', onBack
 
   if (!course) {
     return (
-      <div className="app">
-        <div className="app-body" style={{ padding: '2rem', color: 'var(--text-muted)' }}>
-          <p>Curso no encontrado: {courseSlug}</p>
-          <button type="button" className="back-dashboard-btn" onClick={onBack}>
-            ← Volver
-          </button>
-        </div>
-      </div>
+      <CourseViewEmpty
+        message={<>Curso no encontrado: <code>{courseSlug}</code></>}
+        onBack={onBack}
+      />
     )
   }
 
@@ -29,29 +48,49 @@ export default function CourseView({ courseSlug = 'programacion-jovenes', onBack
 
   if (!current) {
     return (
-      <div className="app">
-        <div className="app-body" style={{ padding: '2rem', color: 'var(--text-muted)' }}>
-          <p>Lección no disponible.</p>
-          <button type="button" className="back-dashboard-btn" onClick={onBack}>
-            ← Volver
-          </button>
-        </div>
-      </div>
+      <CourseViewEmpty
+        message="Lección no disponible."
+        onBack={onBack}
+      />
     )
   }
 
   const phases = [...new Set(lessons.map(l => l.phase))]
 
   return (
-    <div className="app" data-phase={current.phase}>
-      <header className="app-header">
-        <div className="app-header-inner">
-          <button type="button" className="back-dashboard-btn" onClick={onBack}>
-            ← Mapa Dev-Node
-          </button>
+    <CourseViewShell dataPhase={current.phase}>
+      <header className="courseview-hud">
+        <button type="button" className="courseview-btn-back" onClick={onBack}>
+          ← MAPA
+        </button>
+
+        <div className="courseview-hud-brand">
+          <div className="courseview-hud-logo">
+            <div className="courseview-hud-logo-outer" />
+            <div className="courseview-hud-logo-inner">
+              <span>D</span>
+            </div>
+          </div>
+          <div>
+            <div className="courseview-hud-title-main">DEV-NODE</div>
+            <div className="courseview-hud-title-sub">LEARN · SESSION</div>
+          </div>
+        </div>
+
+        <div className="courseview-hud-divider" />
+
+        <nav className="courseview-breadcrumb" aria-label="Ubicación">
+          <span className="courseview-section-tag">{phaseLabels[current.phase]}</span>
+          <span className="courseview-breadcrumb-sep">/</span>
+          <span className="courseview-breadcrumb-current">
+            L_{String(activeIndex + 1).padStart(2, '0')} · {current.title}
+          </span>
+        </nav>
+
+        <div className="courseview-hud-actions">
           <button
             type="button"
-            className="back-dashboard-btn"
+            className="courseview-btn-neon"
             disabled={completing}
             onClick={async () => {
               setCompleting(true)
@@ -65,58 +104,52 @@ export default function CourseView({ courseSlug = 'programacion-jovenes', onBack
               }
             }}
           >
-            {completing ? 'Guardando...' : '✓ Completar nodo'}
+            {completing ? 'GUARDANDO...' : '✓ COMPLETAR'}
           </button>
-          <span className="logo">DevNodo<span className="logo-accent">Learn</span></span>
-          <nav className="breadcrumb">
-            <span>{phaseLabels[current.phase]}</span>
-            <span className="sep">/</span>
-            <span className="current">Lección {activeIndex + 1}: {current.title}</span>
-          </nav>
-          <div className="header-user">
-            <span className="user-name">{user.name}</span>
-            <button className="logout-btn" type="button" onClick={logout}>
-              Cerrar sesión
+          <div className="courseview-hud-user">
+            <span className="courseview-user-name">{user.name}</span>
+            <button className="courseview-btn-ghost" type="button" onClick={logout}>
+              LOGOUT
             </button>
           </div>
         </div>
       </header>
 
-      <div className="app-body">
-        <nav className="lessons-nav">
-          {phases.map((phase, pi) => {
-            const phaseLessons = lessons
-              .map((l, i) => ({ ...l, globalIndex: i }))
-              .filter(l => l.phase === phase)
-            return (
-              <div key={phase} className="phase-group" data-phase={phase}>
-                {pi > 0 && <span className="phase-divider" />}
-                <span className="lessons-nav-heading">{phaseLabels[phase]}</span>
-                {phaseLessons.map(l => (
-                  <button
-                    key={l.id}
-                    type="button"
-                    className={`lessons-nav-item ${activeIndex === l.globalIndex ? 'active' : ''}`}
-                    onClick={() => setActiveIndex(l.globalIndex)}
-                  >
-                    <span className="nav-num">{l.globalIndex + 1}</span>
-                    <span className="nav-title">{l.title}</span>
-                  </button>
-                ))}
-              </div>
-            )
-          })}
-        </nav>
+      <nav className="courseview-nav" aria-label="Lecciones">
+        {phases.map((phase, pi) => {
+          const phaseLessons = lessons
+            .map((l, i) => ({ ...l, globalIndex: i }))
+            .filter(l => l.phase === phase)
+          return (
+            <div key={phase} className="courseview-phase-group" data-phase={phase}>
+              {pi > 0 && <span className="courseview-phase-divider" />}
+              <span className="courseview-nav-heading">{phaseLabels[phase]}</span>
+              {phaseLessons.map(l => (
+                <button
+                  key={l.id}
+                  type="button"
+                  className={`courseview-nav-item ${activeIndex === l.globalIndex ? 'active' : ''}`}
+                  onClick={() => setActiveIndex(l.globalIndex)}
+                >
+                  <span className="courseview-nav-num">
+                    {String(l.globalIndex + 1).padStart(2, '0')}
+                  </span>
+                  <span className="courseview-nav-title">{l.title}</span>
+                </button>
+              ))}
+            </div>
+          )
+        })}
+      </nav>
 
-        <main className="app-main">
-          <LessonPage
-            key={current.id}
-            lesson={current}
-            exercises={current.exercises}
-            lessonNumber={activeIndex + 1}
-          />
-        </main>
-      </div>
-    </div>
+      <main className="courseview-main">
+        <LessonPage
+          key={current.id}
+          lesson={current}
+          exercises={current.exercises}
+          lessonNumber={activeIndex + 1}
+        />
+      </main>
+    </CourseViewShell>
   )
 }

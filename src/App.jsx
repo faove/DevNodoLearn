@@ -14,6 +14,7 @@ function MainApp() {
   const [appView, setAppView] = useState('dashboard')
   const [courseSlug, setCourseSlug] = useState('programacion-jovenes')
   const [lessonIndex, setLessonIndex] = useState(0)
+  const [exerciseIndex, setExerciseIndex] = useState(0)
   const [devNodoKey, setDevNodoKey] = useState(0)
 
   function backToDevNodo() {
@@ -40,6 +41,7 @@ function MainApp() {
       <CourseView
         courseSlug={courseSlug}
         initialLessonIndex={lessonIndex}
+        initialExerciseIndex={exerciseIndex}
         onBack={backToDevNodo}
       />
     )
@@ -51,8 +53,9 @@ function MainApp() {
         key={devNodoKey}
         courseSlug={courseSlug}
         onBack={() => setAppView('dashboard')}
-        onStartLesson={index => {
+        onStartLesson={(index, exIdx = 0) => {
           setLessonIndex(index)
+          setExerciseIndex(exIdx)
           setAppView('course')
         }}
       />

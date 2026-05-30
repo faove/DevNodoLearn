@@ -34,14 +34,22 @@ $saludo = "¡Hola, PHP 8!";
 echo $saludo . PHP_EOL;
 `
 
-export default function LessonPage({ lesson, exercises, lessonNumber }) {
+export default function LessonPage({
+  lesson,
+  exercises,
+  lessonNumber,
+  initialExerciseIndex = 0,
+  onExerciseChange,
+  onResumePointChange,
+  openExercisesTab = false,
+}) {
   const language = lesson.language || 'python'
   const isHtml = language === 'html'
   const isBash = language === 'bash'
   const isPhp  = language === 'php'
   const isScriptOnly = isBash || isPhp
 
-  const [activeTab, setActiveTab] = useState('lesson')
+  const [activeTab, setActiveTab] = useState(openExercisesTab ? 'exercises' : 'lesson')
   const [sandboxCode, setSandboxCode] = useState(() => {
     if (isHtml) return HTML_STARTER
     if (isBash) return BASH_STARTER
@@ -162,7 +170,13 @@ export default function LessonPage({ lesson, exercises, lessonNumber }) {
           )}
 
           {activeTab === 'exercises' && (
-            <ExercisePanel exercises={exercises} language={language} />
+            <ExercisePanel
+              exercises={exercises}
+              language={language}
+              initialIndex={initialExerciseIndex}
+              onIndexChange={onExerciseChange}
+              onResumePointChange={onResumePointChange}
+            />
           )}
 
           {activeTab === 'tutor' && (

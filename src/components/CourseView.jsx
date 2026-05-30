@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import LessonPage from './LessonPage'
 import { getCourse } from '../data/registry'
-import { completeNode } from '../services/courseService'
+import { completeNode, getCoursePath, saveCourseProgress } from '../services/courseService'
 import { nodeIdForLessonIndex } from '../data/devNodoPath'
 import './CourseView.css'
 
@@ -28,11 +28,73 @@ function CourseViewEmpty({ message, onBack }) {
   )
 }
 
-export default function CourseView({ courseSlug = 'programacion-jovenes', onBack, initialLessonIndex = 0 }) {
+export default function CourseView({
+  courseSlug = 'programacion-jovenes',
+  onBack,
+  initialLessonIndex = 0,
+  initialExerciseIndex = 0,
+}) {
   const { user, logout } = useAuth()
   const course = getCourse(courseSlug)
   const [activeIndex, setActiveIndex] = useState(initialLessonIndex)
+  const [activeExerciseIndex, setActiveExerciseIndex] = useState(initialExerciseIndex)
+  const [progressLoaded, setProgressLoaded] = useState(false)
   const [completing, setCompleting] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadProgress() {
+      setProgressLoaded(false)
+      try {
+        const data = await getCoursePath(courseSlug)
+        if (cancelled) return
+
+        const progress = data.progress ?? {}
+        setActiveIndex(initialLessonIndex)
+
+        if (progress.activeLessonIndex === initialLessonIndex) {
+          setActiveExerciseIndex(progress.activeExerciseIndex ?? 0)
+        } else {
+          setActiveExerciseIndex(initialExerciseIndex)
+        }
+      } catch {
+        if (!cancelled) {
+          setActiveIndex(initialLessonIndex)
+          setActiveExerciseIndex(initialExerciseIndex)
+        }
+      } finally {
+        if (!cancelled) setProgressLoaded(true)
+      }
+    }
+
+    loadProgress()
+    return () => {
+      cancelled = true
+    }
+  }, [courseSlug, initialLessonIndex, initialExerciseIndex])
+
+  const persistProgress = useCallback(async (lessonIndex, exerciseIndex) => {
+    await saveCourseProgress(courseSlug, { lessonIndex, exerciseIndex })
+  }, [courseSlug])
+
+  const handleExerciseChange = useCallback((exerciseIndex) => {
+    setActiveExerciseIndex(exerciseIndex)
+    persistProgress(activeIndex, exerciseIndex).catch(() => {})
+  }, [activeIndex, persistProgress])
+
+  const handleResumePointChange = useCallback((exerciseIndex) => {
+    persistProgress(activeIndex, exerciseIndex).catch(() => {})
+  }, [activeIndex, persistProgress])
+
+  const handleBack = useCallback(async () => {
+    try {
+      await persistProgress(activeIndex, activeExerciseIndex)
+    } catch {
+      // continue navigation even if save fails
+    }
+    onBack()
+  }, [activeIndex, activeExerciseIndex, onBack, persistProgress])
 
   if (!course) {
     return (
@@ -55,12 +117,20 @@ export default function CourseView({ courseSlug = 'programacion-jovenes', onBack
     )
   }
 
-  const phases = [...new Set(lessons.map(l => l.phase))]
+  if (!progressLoaded) {
+    return (
+      <CourseViewShell dataPhase={current.phase}>
+        <div className="courseview-empty">
+          <p className="courseview-empty-msg">Cargando progreso...</p>
+        </div>
+      </CourseViewShell>
+    )
+  }
 
   return (
     <CourseViewShell dataPhase={current.phase}>
       <header className="courseview-hud">
-        <button type="button" className="courseview-btn-back" onClick={onBack}>
+        <button type="button" className="courseview-btn-back" onClick={handleBack}>
           ← MAPA
         </button>
 
@@ -114,14 +184,17 @@ export default function CourseView({ courseSlug = 'programacion-jovenes', onBack
           </div>
         </div>
       </header>
-    
 
       <main className="courseview-main">
         <LessonPage
-          key={current.id}
+          key={`${current.id}-${activeExerciseIndex}`}
           lesson={current}
           exercises={current.exercises}
           lessonNumber={activeIndex + 1}
+          initialExerciseIndex={activeExerciseIndex}
+          onExerciseChange={handleExerciseChange}
+          onResumePointChange={handleResumePointChange}
+          openExercisesTab={activeExerciseIndex > 0}
         />
       </main>
     </CourseViewShell>

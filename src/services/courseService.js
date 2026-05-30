@@ -60,3 +60,13 @@ export async function completeNode(courseSlug, nodeId) {
     method: 'POST',
   })
 }
+
+export async function saveCourseProgress(courseSlug, { lessonIndex, exerciseIndex }) {
+  return request(`/courses/${courseSlug}/progress`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      lesson_index: lessonIndex,
+      exercise_index: exerciseIndex,
+    }),
+  })
+}

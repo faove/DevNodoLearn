@@ -318,6 +318,7 @@ export default function DevNodo({ courseSlug = 'programacion-jovenes', onBack, o
   const [courseTitle, setCourseTitle] = useState('')
   const [completed, setCompleted] = useState([])
   const [totalXp, setTotalXp] = useState(0)
+  const [activeExerciseIndex, setActiveExerciseIndex] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [openNode, setOpenNode] = useState(null)
@@ -335,6 +336,7 @@ export default function DevNodo({ courseSlug = 'programacion-jovenes', onBack, o
         setCourseTitle(data.course?.title ?? '')
         setCompleted(data.progress?.completedNodeIds ?? [])
         setTotalXp(data.progress?.totalXp ?? 0)
+        setActiveExerciseIndex(data.progress?.activeExerciseIndex ?? 0)
         onProgressChange?.(data.progress?.completedNodeIds ?? [])
       } catch (err) {
         if (!cancelled) setError(err.message)
@@ -379,7 +381,10 @@ export default function DevNodo({ courseSlug = 'programacion-jovenes', onBack, o
 
   function handleStart(node) {
     setOpenNode(null)
-    onStartLesson(node.lessonIndex)
+    const nodeIndex = path.findIndex(n => n.id === node.id)
+    const nodeState = nodeIndex >= 0 ? states[nodeIndex] : 'locked'
+    const exerciseIdx = nodeState === 'active' ? activeExerciseIndex : 0
+    onStartLesson(node.lessonIndex, exerciseIdx)
   }
 
   if (loading) {
